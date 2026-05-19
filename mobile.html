@@ -30,6 +30,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
             z-index: 10;
             flex-shrink: 0;
+            position: relative; /* Для позиционирования кнопки ПК-версии */
         }
 
         .char-name-input {
@@ -42,6 +43,26 @@
             text-align: center;
             width: 100%;
             font-family: 'Georgia', serif;
+        }
+
+        /* Кнопка возврата на ПК */
+        .switch-desktop-btn {
+            position: absolute;
+            right: 15px;
+            background: transparent;
+            border: 1px solid rgba(251, 246, 236, 0.3);
+            color: #fbf6ec;
+            font-size: 14px;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .switch-desktop-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         /* Контент вкладок */
@@ -377,6 +398,9 @@
 
     <div class="top-bar">
         <input type="text" id="char_name" class="char-name-input" placeholder="Имя персонажа">
+        <button class="switch-desktop-btn" onclick="window.location.href='index.html' + window.location.search" title="Вернуться на ПК-версию">
+            💻
+        </button>
     </div>
 
     <div id="tab-main" class="tab-content active">
