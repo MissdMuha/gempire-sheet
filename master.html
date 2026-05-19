@@ -96,7 +96,7 @@
         
         .card-footer { border-top: 1px dashed rgba(69, 63, 60, 0.25); padding: 3px 10px 5px 10px; display: flex; flex-direction: column; justify-content: center; height: 36px; background-color: rgba(255, 255, 255, 0.1); flex-shrink: 0;}
         .footer-label { font-size: 7px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px; }
-        .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
         /* Список существующих карточек */
         .cards-list-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center;}
@@ -110,6 +110,8 @@
         .btn-copy:hover { background-color: #8db5d2; }
         .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-delete:hover { background-color: #c78b98; }
+
+        .card-link { color: #4a76a8; text-decoration: underline; text-decoration-style: dashed; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -167,11 +169,11 @@
                         <div class="card-tag-box"><div class="card-tag-display" id="prev_tag"></div></div>
                     </div>
                     <div class="card-body flesh-theme" id="prev_theme">
-                        <div class="card-rich-text" id="prev_desc" data-max-size="14"></div>
+                        <div class="card-rich-text auto-resize-area" id="prev_desc" data-max-size="14"></div>
                     </div>
                     <div class="card-footer">
                         <div class="footer-label">ТЭГИ</div>
-                        <div class="card-footer-tags-display" id="prev_footer"></div>
+                        <div class="card-footer-tags-display auto-resize-tags" id="prev_footer" data-max-size="11"></div>
                     </div>
                 </div>
             </div>
@@ -191,8 +193,8 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Функция точного авто-ресайза текста (идентична листам игроков)
-        function resizeCardText(area) {
+        // Функция точного авто-ресайза текста описания
+        window.resizeCardText = function(area) {
             if(!area) return;
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
@@ -207,6 +209,23 @@
                 currentFS -= 0.5;
                 update(currentFS);
             }
+        };
+
+        // Функция авто-ресайза тэгов
+        window.resizeTagsText = function(el) {
+            if (!el) return;
+            let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
+            el.style.fontSize = currentFS + 'px';
+            
+            while (el.scrollWidth > el.clientWidth && currentFS > 6) {
+                currentFS -= 0.5;
+                el.style.fontSize = currentFS + 'px';
+            }
+        };
+
+        window.parseCardLinks = function(text) {
+            if (!text) return '';
+            return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link">$1</span>');
         }
 
         // Живое обновление предпросмотра
@@ -215,17 +234,18 @@
             document.getElementById('prev_title').innerText = document.getElementById('input_title').value || 'Без названия';
             document.getElementById('prev_tag').innerText = document.getElementById('input_tag').value;
             
-            // Вставляем текст напрямую (браузер сам корректно обработает \n благодаря white-space: pre-wrap)
             const descBox = document.getElementById('prev_desc');
-            descBox.innerHTML = document.getElementById('input_description').value; 
+            descBox.innerHTML = window.parseCardLinks(document.getElementById('input_description').value); 
             
-            document.getElementById('prev_footer').innerText = document.getElementById('input_footer').value;
+            const footerEl = document.getElementById('prev_footer');
+            footerEl.innerText = document.getElementById('input_footer').value;
             
             const theme = document.getElementById('input_theme').value;
             document.getElementById('prev_theme').className = `card-body ${theme}`;
             
-            // Подгоняем текст под линовку карточки
-            resizeCardText(descBox);
+            // Подгоняем текст под линовку карточки и ресайзим тэги
+            window.resizeCardText(descBox);
+            window.resizeTagsText(footerEl);
         };
         
         document.getElementById('input_theme').addEventListener('change', window.updatePreview);
@@ -261,11 +281,11 @@
                                     <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                                 </div>
                                 <div class="card-body ${safeTheme}">
-                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
+                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                                 </div>
                                 <div class="card-footer">
                                     <div class="footer-label">ТЭГИ</div>
-                                    <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                                    <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                                 </div>
                             </div>
                         </div>
@@ -281,12 +301,15 @@
             // Авторесайз для всех карточек в списке
             setTimeout(() => {
                 grid.querySelectorAll('.auto-resize-area').forEach(el => {
-                    resizeCardText(el);
+                    window.resizeCardText(el);
+                });
+                grid.querySelectorAll('.auto-resize-tags').forEach(el => {
+                    window.resizeTagsText(el);
                 });
             }, 100);
         }
 
-        // Функция копирования в форму (доступна глобально)
+        // Функция копирования в форму
         window.copyToForm = function(cardId) {
             const card = window.allCards.find(c => c.id === cardId);
             if(card) {
@@ -341,7 +364,7 @@
                 statusMsg.innerText = 'Успешно выдано игроку!';
                 setTimeout(() => statusMsg.innerText = '', 3000);
                 
-                // Очищаем форму, но оставляем ID, чтобы было удобно выдать серию карточек одному игроку
+                // Очищаем форму
                 document.getElementById('input_title').value = '';
                 document.getElementById('input_tag').value = '';
                 document.getElementById('input_description').value = '';
