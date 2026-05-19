@@ -379,7 +379,7 @@
         }
 
         .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
-        .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
         /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ КАРТОЧЕК --- */
         .card-link {
@@ -641,7 +641,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="footer-label">ТЭГИ</div>
-                            <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                            <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                         </div>
                     </div>
                 </div>
@@ -650,6 +650,9 @@
             setTimeout(() => {
                 const area = container.querySelector('.auto-resize-area');
                 if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                
+                const tags = container.querySelector('.auto-resize-tags');
+                if (tags && typeof resizeTagsText === 'function') resizeTagsText(tags);
             }, 50);
         };
 
@@ -658,6 +661,7 @@
         };
 
         function resizeCardText(area) {
+            if (!area) return;
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
 
@@ -672,6 +676,18 @@
                 update(currentFS);
             }
         }
+
+        // Функция ресайза тэгов
+        window.resizeTagsText = function(el) {
+            if (!el) return;
+            let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
+            el.style.fontSize = currentFS + 'px';
+            
+            while (el.scrollWidth > el.clientWidth && currentFS > 6) {
+                currentFS -= 0.5;
+                el.style.fontSize = currentFS + 'px';
+            }
+        };
 
         async function loadCharacter() {
             if (!charId) return;
@@ -740,7 +756,7 @@
                                 <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                             </div>
                             <div class="card-footer"> <div class="footer-label">ТЭГИ</div>
-                                <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                                <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                             </div>
                         </div>
                     </div>`;
@@ -750,6 +766,9 @@
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => {
                     resizeCardText(el);
+                });
+                container.querySelectorAll('.auto-resize-tags').forEach(el => {
+                    window.resizeTagsText(el);
                 });
             }, 100);
         }
