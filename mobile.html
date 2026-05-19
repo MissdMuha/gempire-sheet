@@ -72,7 +72,7 @@
             background: transparent;
             border: none;
             color: #8a807a;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -310,7 +310,7 @@
             flex-direction: column;
         }
 
-        /* Защита стилей от расхождений в БД: поддерживаем оба варианта написания классов */
+        /* Цветовые темы (теперь применяются только к телу карточки) */
         .flesh-theme, .bg-flesh { background-color: #f7e6ea !important; }
         .will-theme,  .bg-will  { background-color: #efe3fa !important; }
         .method-theme,.bg-method { background-color: #e3f0fa !important; }
@@ -348,7 +348,7 @@
             justify-content: center;
             height: 40px;
             flex-shrink: 0;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #fbf6ec; /* Жестко заданный базовый цвет карточки */
         }
 
         .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
@@ -490,9 +490,9 @@
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('main', this)">БАЗА</button>
-        <button class="nav-btn" onclick="switchTab('skills', this)">СВОЙСТВА</button>
-        <button class="nav-btn" onclick="switchTab('cards', this)">КАРТЫ</button>
+        <button class="nav-btn active" onclick="switchTab('main', this)">I</button>
+        <button class="nav-btn" onclick="switchTab('skills', this)">II+</button>
+        <button class="nav-btn" onclick="switchTab('cards', this)">Карточки</button>
     </div>
 
     <script>
@@ -614,8 +614,7 @@
                             <div class="card-body ${safeTheme}">
                                 <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
                             </div>
-                            <div class="card-footer ${safeTheme}">
-                                <div class="footer-label">ТЭГИ</div>
+                            <div class="card-footer"> <div class="footer-label">ТЭГИ</div>
                                 <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
                             </div>
                         </div>
