@@ -75,7 +75,7 @@
         }
         .tab-content.active { display: block; }
 
-        /* Навигация (Равные кликабельные трети) */
+        /* Навигация */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -84,13 +84,13 @@
             background-color: #453f3c;
             display: flex;
             padding: 0;
-            padding-bottom: env(safe-area-inset-bottom); /* Учет челки/полоски iOS */
+            padding-bottom: env(safe-area-inset-bottom); 
             box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
             z-index: 10;
         }
 
         .nav-btn {
-            flex: 1; /* Занимает ровно треть ширины */
+            flex: 1; 
             background: transparent;
             border: none;
             color: #8a807a;
@@ -98,7 +98,7 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 15px 0; /* Большая высота для удобного нажатия */
+            padding: 15px 0; 
             outline: none;
             transition: color 0.2s, background-color 0.2s;
             border-bottom: 3px solid transparent; 
@@ -110,13 +110,13 @@
         .nav-btn.active { 
             color: #fbf6ec; 
             border-bottom: 3px solid #fbf6ec; 
-            background-color: rgba(255, 255, 255, 0.05); /* Легкая подсветка активной вкладки */
+            background-color: rgba(255, 255, 255, 0.05); 
         }
 
-        /* Верхние статы (ХП, Воля, Броня) - теперь в один ряд! */
+        /* Верхние статы (ХП, Воля, Броня) */
         .status-grid {
             display: grid;
-            grid-template-columns: 1.2fr 1.2fr 0.8fr; /* Пропорции под контент */
+            grid-template-columns: 1.2fr 1.2fr 0.8fr; 
             gap: 8px;
             margin-bottom: 20px;
         }
@@ -150,7 +150,7 @@
         }
         
         .status-inputs input, .single-status-input {
-            width: 32px; /* Чуть уже, чтобы всё влезло на мобилках */
+            width: 32px; 
             text-align: center;
             font-size: 17px;
             font-weight: bold;
@@ -226,7 +226,7 @@
             color: #2c2825;
         }
 
-        /* Поля ввода в виде строчек (Умный текстовые блоки вместо Input) */
+        /* Поля ввода в виде строчек */
         .mobile-line-textarea {
             width: 100%;
             background: transparent;
@@ -375,12 +375,45 @@
             justify-content: center;
             height: 40px;
             flex-shrink: 0;
-            background-color: #fbf6ec; /* Жестко заданный базовый цвет карточки */
+            background-color: #fbf6ec; 
         }
 
         .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
         .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+        /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ КАРТОЧЕК --- */
+        .card-link {
+            color: #4a76a8; 
+            text-decoration: underline;
+            text-decoration-style: dashed;
+            cursor: pointer;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .card-link:hover { color: #2c4a6b; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; transition: opacity 0.2s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-content {
+            position: relative;
+            transform: scale(1.1); 
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content { transform: scale(1); } 
+        }
+
+        .modal-close-btn {
+            position: absolute; top: -35px; right: -20px;
+            background: transparent; border: none; color: #fbf6ec;
+            font-size: 30px; cursor: pointer; font-weight: bold;
+        }
 
         /* ========================================================
            АДАПТИВНАЯ ВЕРСТКА ДЛЯ ПЛАНШЕТОВ И ГОРИЗОНТАЛЬНОГО РЕЖИМА
@@ -524,6 +557,14 @@
         <button class="nav-btn" onclick="switchTab('cards', this)">Карточки</button>
     </div>
 
+    <div id="card-modal-overlay" class="modal-overlay" onclick="closeCardModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeCardModal()">×</button>
+            <div id="modal-card-container">
+                </div>
+        </div>
+    </div>
+
     <script>
         function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -560,6 +601,61 @@
         const charId = urlParams.get('id');
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
+
+        // Обработка гиперссылок [[Название]]
+        window.parseCardLinks = function(text) {
+            if (!text) return '';
+            return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link" onclick="openCardModal(\'$1\')">$1</span>');
+        }
+
+        // Открытие модального окна с карточкой
+        window.openCardModal = async function(title) {
+            const overlay = document.getElementById('card-modal-overlay');
+            const container = document.getElementById('modal-card-container');
+            container.innerHTML = '<div style="color: #fbf6ec; font-family: sans-serif; background: #38332f; padding: 20px; border-radius: 8px;">Ищем способность...</div>';
+            overlay.classList.add('active');
+
+            // Ищем в базе
+            const { data, error } = await supabase.from('cards').select('*').ilike('card_title', title).limit(1);
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `<div style="background: #fbf6ec; padding: 20px; border-radius: 8px; color: #453f3c; font-family: sans-serif;">Карточка <b>«${title}»</b> не найдена в базе.</div>`;
+                return;
+            }
+
+            const card = data[0];
+            const safeTheme = card.theme ? card.theme.trim() : '';
+            
+            container.innerHTML = `
+                <div class="card" style="margin: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+                    <div class="card-frame">
+                        <div class="card-header">
+                            <div class="card-title-box">
+                                <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
+                                <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                            </div>
+                            <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                        </div>
+                        <div class="card-body ${safeTheme}">
+                            <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="footer-label">ТЭГИ</div>
+                            <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                const area = container.querySelector('.auto-resize-area');
+                if (area && typeof resizeCardText === 'function') resizeCardText(area);
+            }, 50);
+        };
+
+        window.closeCardModal = function() {
+            document.getElementById('card-modal-overlay').classList.remove('active');
+        };
 
         function resizeCardText(area) {
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
@@ -641,7 +737,7 @@
                                 <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                             </div>
                             <div class="card-body ${safeTheme}">
-                                <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
+                                <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                             </div>
                             <div class="card-footer"> <div class="footer-label">ТЭГИ</div>
                                 <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
