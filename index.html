@@ -441,45 +441,79 @@
 	<script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    // ПРОВЕРЬ ЕЩЕ РАЗ: URL должен быть без /rest/v1/ на конце
     const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
-
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    async function testLoad() {
-        console.log("Начинаю загрузку...");
-        
-        // Берем ID из ссылки ?id=1 или ставим 1
-        const urlParams = new URLSearchParams(window.location.search);
-        const charId = urlParams.get('id') || 1;
+    const urlParams = new URLSearchParams(window.location.search);
+    const charId = urlParams.get('id') || 1;
 
+    // 1. ЗАГРУЗКА (Из базы в лист)
+    async function loadCharacter() {
+        console.log("Начинаю загрузку для ID:", charId);
         const { data, error } = await supabase
             .from('characters')
             .select('*')
-            .eq('id', charId)
-            .single();
+            .eq('id', charId);
 
-        if (error) {
-            console.error("Ошибка запроса:", error.message);
-            return;
-        }
-
-        console.log("Данные из базы получены:", data);
-
-        // Простейшая проверка: вставим имя прямо в заголовок страницы
-        if (data && data.char_name) {
-            const nameInput = document.getElementById('char_name');
-            if (nameInput) {
-                nameInput.value = data.char_name;
-                console.log("Имя вставлено в поле!");
-            } else {
-                console.error("Элемент с id='char_name' не найден в HTML!");
+        if (data && data.length > 0) {
+            const character = data[0];
+            console.log("Данные получены:", character);
+            
+            // Раскладываем данные по ID
+            for (const key in character) {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = character[key] || '';
+                    // Вызываем твой ресайз, если он есть
+                    if (window.resizeText) window.resizeText(input);
+                }
             }
         }
     }
 
-    testLoad();
+    // 2. СОХРАНЕНИЕ (Из листа в базу)
+    // Используем делегирование событий на весь документ, это надежнее
+    document.addEventListener('change', async (e) => {
+        if (e.target.tagName === 'INPUT') {
+            const fieldId = e.target.id;
+            const newValue = e.target.value;
+
+            if (fieldId) {
+                console.log(`Сохраняю ${fieldId}: ${newValue}...`);
+                const { error } = await supabase
+                    .from('characters')
+                    .update({ [fieldId]: newValue })
+                    .eq('id', charId);
+                
+                if (error) {
+                    console.error('Ошибка сохранения:', error.message);
+                } else {
+                    console.log('Успешно сохранено в Supabase!');
+                }
+            }
+        }
+    });
+
+    // 3. ОБНОВЛЕНИЕ В РЕАЛЬНОМ ВРЕМЕНИ (Для мастера)
+    supabase
+        .channel('schema-db-changes')
+        .on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
+            (payload) => {
+                console.log('Мастер обновил данные:', payload.new);
+                for (const key in payload.new) {
+                    const input = document.getElementById(key);
+                    if (input) {
+                        input.value = payload.new[key] || '';
+                        if (window.resizeText) window.resizeText(input);
+                    }
+                }
+            }
+        )
+        .subscribe();
+
+    loadCharacter();
 </script>
 </body>
 </html>
