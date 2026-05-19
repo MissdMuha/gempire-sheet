@@ -335,45 +335,28 @@
             color: #2c2825;
             line-height: 1;
             transform: translateY(0.5px); 
-        }
 
-        .card-body {
-            flex-grow: 1;
-            padding: 10px;
-            font-size: 13px;
-            font-family: 'Constantia', 'Cambria', 'Georgia', serif;
-            color: #2c2825;
-            overflow: hidden;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            line-height: 1.4;
-        }
-        
-       .card-body {
+.card-body {
     flex-grow: 1;
-    padding: 10px;
-    font-size: 14px; /* Фиксируем размер для попадания в строки */
+    padding: 0 10px; /* Убираем вертикальный паддинг, будем регулировать его через line-height */
+    margin-top: 5px; /* Небольшой отступ от шапки */
+    
+    font-size: 14px; 
     font-family: 'Constantia', 'Cambria', 'Georgia', serif;
     color: #2c2825;
-    overflow: hidden;
+    
+    /* Жесткая сетка */
+    line-height: 24px; 
     white-space: pre-wrap;
     word-wrap: break-word;
-    
-    /* Устанавливаем высоту строки ровно 24px */
-    line-height: 24px; 
-    
-    /* Делаем фон, который совпадает с высотой строки */
-    background-image: repeating-linear-gradient(
-        transparent,
-        transparent 23px,
-        rgba(69, 63, 60, 0.1) 23px,
-        rgba(69, 63, 60, 0.1) 24px
-    );
-    background-size: 100% 24px;
-    background-attachment: local;
-}
-        }
+    overflow: hidden;
 
+    /* Отрисовка линий через сплошной цвет и тонкую границу внизу каждой строки */
+    background-image: linear-gradient(rgba(69, 63, 60, 0.1) 1px, transparent 1px);
+    background-size: 100% 24px;
+    /* Сдвигаем фон так, чтобы линия была ПОД текстом */
+    background-position: 0 23px; 
+}
         .card-footer {
             border-top: 1px dashed rgba(69, 63, 60, 0.25);
             padding: 3px 10px 5px 10px;
