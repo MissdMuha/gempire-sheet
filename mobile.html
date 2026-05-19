@@ -54,7 +54,7 @@
         }
         .tab-content.active { display: block; }
 
-        /* Навигация */
+        /* Навигация (Равные кликабельные трети) */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -62,13 +62,14 @@
             width: 100%;
             background-color: #453f3c;
             display: flex;
-            justify-content: space-around;
-            padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+            padding: 0;
+            padding-bottom: env(safe-area-inset-bottom); /* Учет челки/полоски iOS */
             box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
             z-index: 10;
         }
 
         .nav-btn {
+            flex: 1; /* Занимает ровно треть ширины */
             background: transparent;
             border: none;
             color: #8a807a;
@@ -76,44 +77,49 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 10px;
+            padding: 15px 0; /* Большая высота для удобного нажатия */
             outline: none;
-            transition: color 0.2s;
+            transition: color 0.2s, background-color 0.2s;
+            border-bottom: 3px solid transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
-        .nav-btn.active { color: #fbf6ec; border-bottom: 2px solid #fbf6ec; }
+        .nav-btn.active { 
+            color: #fbf6ec; 
+            border-bottom: 3px solid #fbf6ec; 
+            background-color: rgba(255, 255, 255, 0.05); /* Легкая подсветка активной вкладки */
+        }
 
-        /* Верхние статы (ХП, Воля, Броня) */
+        /* Верхние статы (ХП, Воля, Броня) - теперь в один ряд! */
         .status-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: 1.2fr 1.2fr 0.8fr; /* Пропорции под контент */
+            gap: 8px;
             margin-bottom: 20px;
         }
         
         .status-card {
             border: 1.5px solid #453f3c;
             border-radius: 8px;
-            padding: 8px;
+            padding: 6px 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             background-color: #fff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .status-card.full-width {
-            grid-column: span 2;
-            flex-direction: row;
-            justify-content: center;
-            gap: 15px;
-        }
 
         .status-label {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             color: #7a706a;
             text-transform: uppercase;
             margin-bottom: 4px;
             letter-spacing: 0.5px;
+            text-align: center;
         }
         
         .status-inputs {
@@ -123,9 +129,9 @@
         }
         
         .status-inputs input, .single-status-input {
-            width: 40px;
+            width: 32px; /* Чуть уже, чтобы всё влезло на мобилках */
             text-align: center;
-            font-size: 18px;
+            font-size: 17px;
             font-weight: bold;
             border: none;
             background: transparent;
@@ -136,9 +142,9 @@
         }
         
         .status-inputs span {
-            font-size: 16px;
+            font-size: 15px;
             color: #7a706a;
-            margin: 0 4px;
+            margin: 0 2px;
         }
 
         /* Стопка для Плоть/Воля/Метод */
@@ -310,7 +316,7 @@
             flex-direction: column;
         }
 
-        /* Цветовые темы (теперь применяются только к телу карточки) */
+        /* Цветовые темы */
         .flesh-theme, .bg-flesh { background-color: #f7e6ea !important; }
         .will-theme,  .bg-will  { background-color: #efe3fa !important; }
         .method-theme,.bg-method { background-color: #e3f0fa !important; }
@@ -359,8 +365,7 @@
            АДАПТИВНАЯ ВЕРСТКА ДЛЯ ПЛАНШЕТОВ И ГОРИЗОНТАЛЬНОГО РЕЖИМА
            ======================================================== */
         @media (min-width: 768px) {
-            .status-grid { grid-template-columns: repeat(3, 1fr); }
-            .status-card.full-width { grid-column: span 1; flex-direction: column; justify-content: center; gap: 0; }
+            .status-grid { grid-template-columns: repeat(3, 1fr); gap: 15px; }
             .attributes-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: start; }
             .skills-tablet-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
             .skills-column .section-title:first-child { margin-top: 0; }
@@ -389,7 +394,7 @@
                     <input type="text" id="willpower_current" inputmode="numeric"><span>/</span><input type="text" id="willpower_max" inputmode="numeric">
                 </div>
             </div>
-            <div class="status-card full-width">
+            <div class="status-card">
                 <span class="status-label">Броня</span>
                 <input type="text" id="armor" class="single-status-input" inputmode="numeric">
             </div>
