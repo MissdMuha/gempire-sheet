@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gempire - Мобильный Лист</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #2b2b2b;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #453f3c;
+            /* Предотвращаем скролл на уровне body, скроллиться будут только вкладки */
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .serif-font { font-family: 'Georgia', 'Times New Roman', serif; }
+
+        /* Верхняя шапка с именем (видна всегда) */
+        .top-bar {
+            background-color: #635a55;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .char-name-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fbf6ec;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Контейнер для вкладок */
+        .tab-content {
+            display: none; /* Скрыты по умолчанию */
+            flex-grow: 1;
+            overflow-y: auto;
+            background-color: #fbf6ec;
+            padding: 15px;
+            padding-bottom: 80px; /* Отступ для нижнего меню */
+        }
+        .tab-content.active { display: block; }
+
+        /* Нижняя навигация */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #453f3c;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: #8a807a;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .nav-btn.active { color: #fbf6ec; }
+
+        /* Оформление блоков характеристик */
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        
+        .stat-card {
+            border: 1.5px solid #453f3c;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+        }
+        .stat-card-label { font-size: 10px; font-weight: bold; color: #7a706a; text-transform: uppercase; margin-bottom: 5px; }
+        
+        .huge-input {
+            width: 100%; text-align: center; font-size: 24px; font-weight: bold;
+            border: none; background: transparent; outline: none;
+        }
+
+        .split-input { display: flex; align-items: center; width: 100%; }
+        .split-input input { width: 45%; text-align: center; font-size: 24px; font-weight: bold; border: none; background: transparent; outline: none; }
+        .split-input span { width: 10%; text-align: center; font-size: 20px; color: #7a706a; }
+
+        /* Основные статы (Плоть, Воля, Метод) */
+        .main-stat-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .main-stat-box {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 20px; border-radius: 8px; font-weight: bold; font-size: 18px;
+        }
+        .bg-flesh { background-color: #f7e6ea; border: 1.5px solid #d4a3ae; }  
+        .bg-will { background-color: #efe3fa; border: 1.5px solid #bfa5df; } 
+        .bg-method { background-color: #e3f0fa; border: 1.5px solid #a5c6df; } 
+
+        .main-stat-input-wrapper {
+            width: 50px; height: 50px; background: #fff; border: 2px solid #453f3c; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .main-stat-input-wrapper input { width: 100%; height: 100%; border: none; text-align: center; font-size: 24px; font-weight: bold; background: transparent; outline: none; }
+
+        /* Списки навыков */
+        .section-title { font-size: 14px; font-weight: bold; text-transform: uppercase; background: #e3ddd7; padding: 8px 10px; border-radius: 6px; margin: 15px 0 10px 0; border: 1px solid #453f3c;}
+        .list-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #d4cdc5; height: 40px; font-size: 16px; font-weight: 600; outline: none; margin-bottom: 5px; }
+        .list-input:focus { border-bottom: 2px solid #453f3c; }
+
+        /* Карточки (Адаптация под мобилу) */
+        .cards-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .card { background-color: #fbf6ec; width: 100%; max-width: 350px; height: auto; min-height: 88.9mm; border: 1px solid rgba(69, 63, 60, 0.1); border-radius: 8px; padding: 2.2mm; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .card-frame { height: 100%; border: 2px solid #453f3c; border-radius: 6px; display: flex; flex-direction: column; position: relative; }
+        .card-header { background-color: #635a55; padding: 8px 10px 6px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #453f3c; }
+        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; }
+        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; }
+        .card-title-display { font-family: 'Constantia', 'Georgia', serif; font-size: 16px; font-weight: bold; color: #fbf6ec; }
+        .card-tag-box { width: 32px; height: 32px; background-color: #fbf6ec; border: 1px solid #453f3c; border-radius: 5px; display: flex; align-items: center; justify-content: center; box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3); }
+        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; }
+        .card-body { padding: 10px; flex-grow: 1; }
+        .card-rich-text { width: 100%; font-family: 'Constantia', 'Cambria', 'Georgia', serif; font-size: 15px; color: #2c2825; white-space: pre-wrap; word-wrap: break-word; --lh: 25px; line-height: var(--lh); background-image: repeating-linear-gradient(transparent, transparent calc(var(--lh) - 1px), rgba(69, 63, 60, 0.15) calc(var(--lh) - 1px), rgba(69, 63, 60, 0.15) var(--lh)); background-attachment: local; }
+        .card-rich-text b, .card-rich-text strong { font-weight: 800; color: #000; }
+        .card-footer { border-top: 1px dashed rgba(69, 63, 60, 0.25); padding: 5px 10px; display: flex; flex-direction: column; justify-content: center; background-color: rgba(255, 255, 255, 0.1); }
+        .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1px; text-transform: uppercase; }
+        .card-footer-tags-display { font-size: 12px; font-weight: bold; color: #453f3c; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <input type="text" id="char_name" class="char-name-input serif-font" placeholder="Имя персонажа">
+    </div>
+
+    <div id="tab-main" class="tab-content active">
+        <div class="grid-2-col">
+            <div class="stat-card">
+                <span class="stat-card-label">Здоровье</span>
+                <div class="split-input serif-font">
+                    <input type="number" id="hp_current"><span>/</span><input type="number" id="hp_max">
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-label">Очки Воли</span>
+                <div class="split-input serif-font">
+                    <input type="number" id="willpower_current"><span>/</span><input type="number" id="willpower_max">
+                </div>
+            </div>
+            <div class="stat-card" style="grid-column: span 2;">
+                <span class="stat-card-label">Броня</span>
+                <input type="text" id="armor" class="huge-input serif-font">
+            </div>
+        </div>
+
+        <div class="main-stat-row serif-font">
+            <div class="main-stat-box bg-flesh">
+                <span>ПЛОТЬ</span>
+                <div class="main-stat-input-wrapper"><input type="number" id="stat_flesh"></div>
+            </div>
+            <div class="main-stat-box bg-will">
+                <span>ВОЛЯ</span>
+                <div class="main-stat-input-wrapper"><input type="number" id="stat_will"></div>
+            </div>
+            <div class="main-stat-box bg-method">
+                <span>МЕТОД</span>
+                <div class="main-stat-input-wrapper"><input type="number" id="stat_method"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-skills" class="tab-content">
+        <div class="section-title">I Ступень (Плоть)</div>
+        <input type="text" id="t1_flesh_1" class="list-input"><input type="text" id="t1_flesh_2" class="list-input">
+        <div class="section-title">I Ступень (Воля)</div>
+        <input type="text" id="t1_will_1" class="list-input"><input type="text" id="t1_will_2" class="list-input">
+        <div class="section-title">I Ступень (Метод)</div>
+        <input type="text" id="t1_method_1" class="list-input"><input type="text" id="t1_method_2" class="list-input">
+        
+        <div class="section-title">II Ступень</div>
+        <input type="text" id="t2_1" class="list-input"><input type="text" id="t2_2" class="list-input"><input type="text" id="t2_3" class="list-input">
+        
+        <div class="section-title">III Ступень</div>
+        <input type="text" id="t3_1" class="list-input"><input type="text" id="t3_2" class="list-input">
+        
+        <div class="section-title">Догмы</div>
+        <input type="text" id="dogma_1" class="list-input"><input type="text" id="dogma_2" class="list-input">
+        
+        <div class="section-title">Инвентарь</div>
+        <input type="text" id="equip_1" class="list-input"><input type="text" id="equip_2" class="list-input"><input type="text" id="equip_3" class="list-input">
+    </div>
+
+    <div id="tab-cards" class="tab-content">
+        <div id="cards-container" class="cards-container">
+            </div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('main', this)">
+            <span style="font-size: 20px;">👤</span> Главное
+        </button>
+        <button class="nav-btn" onclick="switchTab('skills', this)">
+            <span style="font-size: 20px;">📜</span> Навыки
+        </button>
+        <button class="nav-btn" onclick="switchTab('cards', this)">
+            <span style="font-size: 20px;">🃏</span> Карточки
+        </button>
+    </div>
+
+    <script>
+        // Переключение вкладок
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btn.classList.add('active');
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+        const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const charId = urlParams.get('id');
+
+        if (!charId) alert("Ошибка: ID персонажа не указан.");
+
+        // ЗАГРУЗКА
+        async function loadCharacter() {
+            if (!charId) return;
+            const { data } = await supabase.from('characters').select('*').eq('id', charId);
+            if (data && data.length > 0) {
+                for (const key in data[0]) {
+                    const input = document.getElementById(key);
+                    if (input) input.value = data[0][key] || '';
+                }
+            }
+        }
+
+        // СОХРАНЕНИЕ
+        document.addEventListener('change', async (e) => {
+            if (e.target.tagName === 'INPUT') {
+                const fieldId = e.target.id;
+                if (fieldId && charId) {
+                    await supabase.from('characters').update({ [fieldId]: e.target.value }).eq('id', charId);
+                }
+            }
+        });
+
+        // REALTIME
+        supabase.channel('any').on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
+            (payload) => {
+                for (const key in payload.new) {
+                    const input = document.getElementById(key);
+                    if (input && document.activeElement !== input) input.value = payload.new[key] || '';
+                }
+            }
+        ).subscribe();
+
+        // КАРТОЧКИ
+        async function loadCards() {
+            if (!charId) return;
+            const { data: cards } = await supabase.from('cards').select('*').eq('owner_id', charId);
+            const container = document.getElementById('cards-container');
+            container.innerHTML = ''; 
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = '<p style="text-align: center;">Нет активных карточек.</p>';
+                return;
+            }
+
+            cards.forEach(card => {
+                const html = `
+                    <div class="card">
+                        <div class="card-frame">
+                            <div class="card-header">
+                                <div class="card-title-box">
+                                    <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
+                                    <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                                </div>
+                                <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                            </div>
+                            <div class="card-body ${card.theme || ''}">
+                                <div class="card-rich-text">${card.card_description || ''}</div>
+                            </div>
+                            <div class="card-footer ${card.theme || ''}">
+                                <div class="footer-label">ТЭГИ</div>
+                                <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        loadCharacter();
+        loadCards();
+    </script>
+</body>
+</html>
