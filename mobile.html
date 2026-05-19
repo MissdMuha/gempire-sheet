@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gempire - Мобильный Лист</title>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             background-color: #2b2b2b;
@@ -20,10 +20,10 @@
 
         .serif-font { font-family: 'Georgia', 'Times New Roman', serif; }
 
-        /* Верхняя шапка с именем */
+        /* Шапка с именем */
         .top-bar {
             background-color: #635a55;
-            padding: 8px 15px;
+            padding: 12px 15px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -37,24 +37,24 @@
             border: none;
             outline: none;
             color: #fbf6ec;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             text-align: center;
             width: 100%;
+            font-family: 'Georgia', serif;
         }
 
-        /* Контейнер для вкладок */
+        /* Контент вкладок */
         .tab-content {
             display: none; 
             flex-grow: 1;
             overflow-y: auto;
             background-color: #fbf6ec;
-            padding: 12px;
-            padding-bottom: 75px; 
+            padding: 15px 15px 90px 15px; /* Увеличен нижний отступ для меню */
         }
         .tab-content.active { display: block; }
 
-        /* Нижняя навигация */
+        /* Навигация */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -63,7 +63,7 @@
             background-color: #453f3c;
             display: flex;
             justify-content: space-around;
-            padding: 12px 0;
+            padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
             box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
             z-index: 10;
         }
@@ -76,201 +76,184 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding: 5px 10px;
+            padding: 10px;
             outline: none;
+            transition: color 0.2s;
         }
         .nav-btn.active { color: #fbf6ec; border-bottom: 2px solid #fbf6ec; }
 
-        /* Компактная сетка статусных полей (ХП, Воля, Броня) */
-        .compact-header-grid {
+        /* Верхние статы (ХП, Воля, Броня) */
+        .status-grid {
             display: grid;
-            grid-template-columns: 1.1fr 1.1fr 0.8fr;
-            gap: 6px;
-            margin-bottom: 12px;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         
-        .compact-info-card {
+        .status-card {
             border: 1.5px solid #453f3c;
-            border-radius: 6px;
-            padding: 4px 6px;
+            border-radius: 8px;
+            padding: 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
             background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .compact-label {
-            font-size: 9px;
+        .status-card.full-width {
+            grid-column: span 2;
+            flex-direction: row;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .status-label {
+            font-size: 10px;
             font-weight: bold;
             color: #7a706a;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
-        .compact-inputs {
+        
+        .status-inputs {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
         }
-        .compact-inputs input {
-            width: 32px;
+        
+        .status-inputs input, .single-status-input {
+            width: 40px;
             text-align: center;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: bold;
             border: none;
             background: transparent;
             outline: none;
-            padding: 0;
-            margin: 0;
             font-family: 'Georgia', serif;
+            color: #2c2825;
+            padding: 0;
         }
-        .compact-inputs span {
-            font-size: 14px;
+        
+        .status-inputs span {
+            font-size: 16px;
             color: #7a706a;
-            margin: 0 2px;
-        }
-        .compact-single-input {
-            width: 100%;
-            text-align: center;
-            font-size: 15px;
-            font-weight: bold;
-            border: none;
-            background: transparent;
-            outline: none;
-            padding: 0;
-            margin: 0;
-            font-family: 'Georgia', serif;
+            margin: 0 4px;
         }
 
-        /* Полная 3-колоночная структура для Первой ступени */
-        .mobile-columns-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            margin-top: 5px;
+        /* Стопка для Плоть/Воля/Метод */
+        .attributes-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         .bg-flesh { background-color: #f7e6ea; border: 1.5px solid #d4a3ae; }  
         .bg-will { background-color: #efe3fa; border: 1.5px solid #bfa5df; } 
         .bg-method { background-color: #e3f0fa; border: 1.5px solid #a5c6df; } 
 
-        .mobile-tier1-column {
+        .attribute-block {
             border-radius: 8px;
-            padding: 6px 4px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            align-items: center;
         }
-        
-        .mobile-stat-header-block {
+
+        .attribute-header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1.5px solid rgba(69, 63, 60, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .attribute-title {
             font-weight: bold;
-            font-size: 11px;
-            letter-spacing: 0.5px;
+            font-size: 16px;
+            letter-spacing: 1px;
             color: #453f3c;
-            margin-bottom: 4px;
-            width: 100%;
         }
-        
-        .mobile-stat-box-square {
-            width: 38px;
-            height: 38px;
+
+        .attribute-value-box {
+            width: 44px;
+            height: 44px;
             background: #ffffff;
             border: 1.5px solid #453f3c;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 3px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        .mobile-stat-box-square input {
+
+        .attribute-value-box input {
             width: 100%;
-            height: 100%;
             border: none;
             background: transparent;
             text-align: center;
-            font-size: 18px;
+            font-size: 22px;
             font-family: 'Georgia', serif;
             font-weight: bold;
             outline: none;
-            padding: 0;
-            margin: 0;
             color: #2c2825;
         }
 
-        /* Саморасширяющиеся текстовые поля для длинных строк */
-        .mobile-skill-textarea {
+        /* Поля для навыков (однострочные, высокие) */
+        .mobile-line-input {
             width: 100%;
             background: transparent;
             border: none;
             border-bottom: 1px solid rgba(69, 63, 60, 0.2);
-            font-family: 'Trebuchet MS', sans-serif;
-            font-size: 11px;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+            font-size: 15px;
             font-weight: 600;
             color: #38332f;
             outline: none;
-            resize: none;
-            padding: 2px 0;
-            text-align: center;
-            overflow: hidden;
-            height: 22px;
-            line-height: 1.2;
+            padding: 0 5px;
+            height: 36px;
+            line-height: 36px;
+            transition: background-color 0.2s;
+        }
+        .mobile-line-input:focus {
+            background-color: rgba(255,255,255,0.4);
+            border-bottom: 1px solid #a39b94;
         }
 
-        /* Стили для Вторых/Третьих ступеней на Вкладке 2 */
+        /* Заголовки разделов (2 Вкладка) */
         .section-title { 
-            font-size: 12px; 
+            font-size: 13px; 
             font-weight: bold; 
             text-transform: uppercase; 
             background: #e3ddd7; 
-            padding: 5px 10px; 
-            border-radius: 5px; 
-            margin: 12px 0 6px 0; 
-            border: 1px solid #453f3c;
-            letter-spacing: 0.5px;
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            margin: 20px 0 10px 0; 
+            border: 1.5px solid #453f3c;
+            letter-spacing: 1px;
+            color: #2c2825;
         }
-        
-        .mobile-textarea-line {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid #d4cdc5;
-            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            color: #38332f;
-            outline: none;
-            resize: none;
-            padding: 4px 2px;
-            margin-bottom: 2px;
-            overflow: hidden;
-            height: 28px;
-            line-height: 1.3;
-        }
+        .section-title:first-child { margin-top: 0; }
 
-        /* --- ФИКС КАРТОЧЕК НА МОБИЛЬНОМ (Сохранение оригинальных пропорций) --- */
+        /* Карточки */
         .cards-container { 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            gap: 20px; 
-            padding-top: 5px;
+            gap: 25px; 
         }
         
         .card {
             background-color: #fbf6ec; 
-            width: 63.5mm;
-            height: 88.9mm;
+            width: 100%;
+            max-width: 300px;
+            height: 420px; /* Приблизительное соотношение 63.5/88.9 */
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
             display: flex;
-            padding: 2.2mm; 
+            padding: 8px; 
             position: relative;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             flex-shrink: 0;
         }
 
@@ -286,21 +269,21 @@
 
         .card-header {
             background-color: #635a55;
-            padding: 8px 10px 6px 10px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #453f3c;
-            height: 48px;
+            height: 52px;
             flex-shrink: 0;
         }
 
-        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; }
-        .card-title-display { font-family: 'Constantia', 'Georgia', serif; font-size: 15px; font-weight: bold; color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; justify-content: center; }
+        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; letter-spacing: 0.5px;}
+        .card-title-display { font-family: 'Constantia', 'Georgia', serif; font-size: 16px; font-weight: bold; color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         .card-tag-box {
-            width: 30px; height: 30px; 
+            width: 32px; height: 32px; 
             background-color: #fbf6ec; 
             border: 1px solid #453f3c; 
             border-radius: 5px;
@@ -308,18 +291,17 @@
             flex-shrink: 0;
             box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
         }
-        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; line-height: 1; transform: translateY(0.5px); }
+        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; }
 
         .card-body {
             flex-grow: 1;
             position: relative;
-            padding: 0 10px;
+            padding: 5px 12px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* Привязка тем к цветовой подложке */
         .flesh-theme { background-color: #f7e6ea !important; }
         .will-theme  { background-color: #efe3fa !important; }
         .method-theme { background-color: #e3f0fa !important; }
@@ -351,124 +333,125 @@
 
         .card-footer {
             border-top: 1px dashed rgba(69, 63, 60, 0.25);
-            padding: 3px 10px 5px 10px;
+            padding: 5px 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            height: 36px;
+            height: 40px;
             flex-shrink: 0;
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .footer-label { font-size: 7px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px; }
+        .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
         .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <input type="text" id="char_name" class="char-name-input serif-font" placeholder="Имя персонажа">
+        <input type="text" id="char_name" class="char-name-input" placeholder="Имя персонажа">
     </div>
 
     <div id="tab-main" class="tab-content active">
-        <div class="compact-header-grid">
-            <div class="compact-info-card">
-                <span class="compact-label">Здоровье</span>
-                <div class="compact-inputs">
-                    <input type="text" id="hp_current"><span>/</span><input type="text" id="hp_max">
+        
+        <div class="status-grid serif-font">
+            <div class="status-card">
+                <span class="status-label">Здоровье</span>
+                <div class="status-inputs">
+                    <input type="text" id="hp_current" inputmode="numeric"><span>/</span><input type="text" id="hp_max" inputmode="numeric">
                 </div>
             </div>
-            <div class="compact-info-card">
-                <span class="compact-label">Очки Воли</span>
-                <div class="compact-inputs">
-                    <input type="text" id="willpower_current"><span>/</span><input type="text" id="willpower_max">
+            <div class="status-card">
+                <span class="status-label">Очки Воли</span>
+                <div class="status-inputs">
+                    <input type="text" id="willpower_current" inputmode="numeric"><span>/</span><input type="text" id="willpower_max" inputmode="numeric">
                 </div>
             </div>
-            <div class="compact-info-card">
-                <span class="compact-label">Броня</span>
-                <input type="text" id="armor" class="compact-single-input">
+            <div class="status-card full-width">
+                <span class="status-label" style="margin-bottom: 0;">Броня</span>
+                <input type="text" id="armor" class="single-status-input" inputmode="numeric">
             </div>
         </div>
 
-        <div class="mobile-columns-container serif-font">
-            <div class="mobile-tier1-column bg-flesh">
-                <div class="mobile-stat-header-block">
-                    <span>ПЛОТЬ</span>
-                    <div class="mobile-stat-box-square">
-                        <input type="text" id="stat_flesh">
+        <div class="attributes-stack">
+            <div class="attribute-block bg-flesh">
+                <div class="attribute-header">
+                    <span class="attribute-title serif-font">ПЛОТЬ</span>
+                    <div class="attribute-value-box">
+                        <input type="text" id="stat_flesh" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <textarea id="t1_flesh_1" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_flesh_2" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_flesh_3" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_flesh_4" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_flesh_5" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_flesh_6" class="mobile-skill-textarea"></textarea>
+                <input type="text" id="t1_flesh_1" class="mobile-line-input" placeholder="Навык плоти...">
+                <input type="text" id="t1_flesh_2" class="mobile-line-input">
+                <input type="text" id="t1_flesh_3" class="mobile-line-input">
+                <input type="text" id="t1_flesh_4" class="mobile-line-input">
+                <input type="text" id="t1_flesh_5" class="mobile-line-input">
+                <input type="text" id="t1_flesh_6" class="mobile-line-input">
             </div>
 
-            <div class="mobile-tier1-column bg-will">
-                <div class="mobile-stat-header-block">
-                    <span>ВОЛЯ</span>
-                    <div class="mobile-stat-box-square">
-                        <input type="text" id="stat_will">
+            <div class="attribute-block bg-will">
+                <div class="attribute-header">
+                    <span class="attribute-title serif-font">ВОЛЯ</span>
+                    <div class="attribute-value-box">
+                        <input type="text" id="stat_will" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <textarea id="t1_will_1" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_will_2" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_will_3" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_will_4" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_will_5" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_will_6" class="mobile-skill-textarea"></textarea>
+                <input type="text" id="t1_will_1" class="mobile-line-input" placeholder="Навык воли...">
+                <input type="text" id="t1_will_2" class="mobile-line-input">
+                <input type="text" id="t1_will_3" class="mobile-line-input">
+                <input type="text" id="t1_will_4" class="mobile-line-input">
+                <input type="text" id="t1_will_5" class="mobile-line-input">
+                <input type="text" id="t1_will_6" class="mobile-line-input">
             </div>
 
-            <div class="mobile-tier1-column bg-method">
-                <div class="mobile-stat-header-block">
-                    <span>МЕТОД</span>
-                    <div class="mobile-stat-box-square">
-                        <input type="text" id="stat_method">
+            <div class="attribute-block bg-method">
+                <div class="attribute-header">
+                    <span class="attribute-title serif-font">МЕТОД</span>
+                    <div class="attribute-value-box">
+                        <input type="text" id="stat_method" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <textarea id="t1_method_1" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_method_2" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_method_3" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_method_4" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_method_5" class="mobile-skill-textarea"></textarea>
-                <textarea id="t1_method_6" class="mobile-skill-textarea"></textarea>
+                <input type="text" id="t1_method_1" class="mobile-line-input" placeholder="Навык метода...">
+                <input type="text" id="t1_method_2" class="mobile-line-input">
+                <input type="text" id="t1_method_3" class="mobile-line-input">
+                <input type="text" id="t1_method_4" class="mobile-line-input">
+                <input type="text" id="t1_method_5" class="mobile-line-input">
+                <input type="text" id="t1_method_6" class="mobile-line-input">
             </div>
         </div>
     </div>
 
     <div id="tab-skills" class="tab-content">
-        <div class="section-title">Вторая Ступень</div>
-        <textarea id="t2_1" class="mobile-textarea-line"></textarea>
-        <textarea id="t2_2" class="mobile-textarea-line"></textarea>
-        <textarea id="t2_3" class="mobile-textarea-line"></textarea>
-        <textarea id="t2_4" class="mobile-textarea-line"></textarea>
-        <textarea id="t2_5" class="mobile-textarea-line"></textarea>
-        <textarea id="t2_6" class="mobile-textarea-line"></textarea>
+        <div class="section-title serif-font">Вторая Ступень</div>
+        <input type="text" id="t2_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t2_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t2_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t2_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t2_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t2_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
         
-        <div class="section-title">Третья Ступень</div>
-        <textarea id="t3_1" class="mobile-textarea-line"></textarea>
-        <textarea id="t3_2" class="mobile-textarea-line"></textarea>
-        <textarea id="t3_3" class="mobile-textarea-line"></textarea>
-        <textarea id="t3_4" class="mobile-textarea-line"></textarea>
-        <textarea id="t3_5" class="mobile-textarea-line"></textarea>
-        <textarea id="t3_6" class="mobile-textarea-line"></textarea>
+        <div class="section-title serif-font">Третья Ступень</div>
+        <input type="text" id="t3_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t3_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t3_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t3_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t3_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="t3_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
         
-        <div class="section-title">Догмы и Навыки Догм</div>
-        <textarea id="dogma_1" class="mobile-textarea-line"></textarea>
-        <textarea id="dogma_2" class="mobile-textarea-line"></textarea>
-        <textarea id="dogma_3" class="mobile-textarea-line"></textarea>
-        <textarea id="dogma_4" class="mobile-textarea-line"></textarea>
-        <textarea id="dogma_5" class="mobile-textarea-line"></textarea>
-        <textarea id="dogma_6" class="mobile-textarea-line"></textarea>
+        <div class="section-title serif-font">Догмы и Навыки Догм</div>
+        <input type="text" id="dogma_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="dogma_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="dogma_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="dogma_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="dogma_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="dogma_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
         
-        <div class="section-title">Снаряжение и Предметы</div>
-        <textarea id="equip_1" class="mobile-textarea-line"></textarea>
-        <textarea id="equip_2" class="mobile-textarea-line"></textarea>
-        <textarea id="equip_3" class="mobile-textarea-line"></textarea>
-        <textarea id="equip_4" class="mobile-textarea-line"></textarea>
-        <textarea id="equip_5" class="mobile-textarea-line"></textarea>
+        <div class="section-title serif-font">Снаряжение и Предметы</div>
+        <input type="text" id="equip_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="equip_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="equip_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="equip_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <input type="text" id="equip_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
     </div>
 
     <div id="tab-cards" class="tab-content">
@@ -483,29 +466,13 @@
     </div>
 
     <script>
-        // Переключение вкладок
         function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             btn.classList.add('active');
+            window.scrollTo(0, 0); // Сброс скролла при переключении
         }
-
-        // Функция автоматического расширения высоты для textarea
-        function autoExpandTextarea(el) {
-            setTimeout(() => {
-                el.style.height = 'auto';
-                // Присваиваем высоту на основе скролла, чтобы текст не обрезался
-                el.style.height = (el.scrollHeight) + 'px';
-            }, 0);
-        }
-
-        // Слушаем ввод во всех textarea для динамического ресайза высоты полосок
-        document.addEventListener('input', (e) => {
-            if (e.target.tagName === 'TEXTAREA' && !e.target.classList.contains('auto-resize-area')) {
-                autoExpandTextarea(e.target);
-            }
-        });
     </script>
 
     <script type="module">
@@ -520,7 +487,7 @@
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
 
-        // Авто-ресайз текста внутри карточкиспособности под линовку
+        // Подгонка текста под линовку карточек
         function resizeTextArea(area) {
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
@@ -537,7 +504,6 @@
             }
         }
 
-        // ЗАГРУЗКА ДАННЫХ ПЕРСОНАЖА
         async function loadCharacter() {
             if (!charId) return;
             const { data } = await supabase.from('characters').select('*').eq('id', charId);
@@ -546,18 +512,13 @@
                     const input = document.getElementById(key);
                     if (input) {
                         input.value = data[0][key] || '';
-                        // Если это текстовое поле, расширяем его под размер загруженного текста
-                        if (input.tagName === 'TEXTAREA') {
-                            autoExpandTextarea(input);
-                        }
                     }
                 }
             }
         }
 
-        // СОХРАНЕНИЕ ДАННЫХ ИЗ ИНПУТОВ И ТЕКСТАРЕА
         document.addEventListener('change', async (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            if (e.target.tagName === 'INPUT') {
                 const fieldId = e.target.id;
                 if (fieldId && charId) {
                     await supabase.from('characters').update({ [fieldId]: e.target.value }).eq('id', charId);
@@ -565,7 +526,6 @@
             }
         });
 
-        // REALTIME ОБНОВЛЕНИЯ (От Мастера)
         supabase.channel('any').on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
@@ -573,13 +533,11 @@
                     const input = document.getElementById(key);
                     if (input && document.activeElement !== input) {
                         input.value = payload.new[key] || '';
-                        if (input.tagName === 'TEXTAREA') autoExpandTextarea(input);
                     }
                 }
             }
         ).subscribe();
 
-        // ЗАГРУЗКА КАРТОЧЕК С СОХРАНЕНИЕМ СТИЛЕЙ И ЦВЕТОВЫХ ПОДЛОЖЕК
         async function loadCards() {
             if (!charId) return;
             const { data: cards } = await supabase.from('cards').select('*').eq('owner_id', charId);
@@ -587,7 +545,7 @@
             container.innerHTML = ''; 
 
             if (!cards || cards.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #8a807a; margin-top: 20px;">Нет активных карточек.</p>';
+                container.innerHTML = '<p style="text-align: center; color: #8a807a; margin-top: 40px; font-size: 14px;">Нет активных карточек.</p>';
                 return;
             }
 
@@ -614,10 +572,11 @@
                 container.insertAdjacentHTML('beforeend', html);
             });
 
-            // Запуск автоподгона текста к линовке на мобильном экране
-            container.querySelectorAll('.auto-resize-area').forEach(el => {
-                resizeTextArea(el);
-            });
+            setTimeout(() => {
+                container.querySelectorAll('.auto-resize-area').forEach(el => {
+                    resizeTextArea(el);
+                });
+            }, 100);
         }
 
         loadCharacter();
