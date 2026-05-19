@@ -38,12 +38,35 @@
             font-family: 'Georgia', 'Times New Roman', serif;
         }
 
+        /* Кнопка переключения версий */
+        .switch-version-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #453f3c;
+            color: #fbf6ec;
+            border: 1px solid rgba(251, 246, 236, 0.2);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            z-index: 1000;
+            transition: background-color 0.2s;
+        }
+        .switch-version-btn:hover {
+            background-color: #635a55;
+        }
+
         @page { size: A4; margin: 0; }
         @media print {
             body { background-color: transparent; padding: 0; margin: 0; }
             .sheet { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; page-break-after: always; }
             input { background: transparent !important; }
             .cards-view-section { margin-top: 0; }
+            .switch-version-btn { display: none; } /* Прячем кнопку при печати */
         }
 
         /* Шапка */
@@ -418,6 +441,10 @@
     </style>
 </head>
 <body>
+    
+    <button class="switch-version-btn" onclick="window.location.href='mobile.html' + window.location.search">
+        📱 Мобильная версия
+    </button>
 
     <div class="sheet">
         <div class="header-grid serif-font">
