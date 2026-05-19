@@ -448,7 +448,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id') || 1;
 
-    // 1. ЗАГРУЗКА (Из базы в лист)
+    // 1. ЗАГРУЗКА ИЗ БАЗЫ
     async function loadCharacter() {
         console.log("Начинаю загрузку для ID:", charId);
         const { data, error } = await supabase
@@ -458,55 +458,57 @@
 
         if (data && data.length > 0) {
             const character = data[0];
-            console.log("Данные получены:", character);
+            console.log("Данные из базы получены:", character);
             
-            // Раскладываем данные по ID
             for (const key in character) {
                 const input = document.getElementById(key);
                 if (input) {
                     input.value = character[key] || '';
-                    // Вызываем твой ресайз, если он есть
-                    if (window.resizeText) window.resizeText(input);
+                    if (typeof resizeText === 'function') resizeText(input);
                 }
             }
         }
     }
 
-    // 2. СОХРАНЕНИЕ (Из листа в базу)
-    // Используем делегирование событий на весь документ, это надежнее
-    document.addEventListener('change', async (e) => {
-        if (e.target.tagName === 'INPUT') {
-            const fieldId = e.target.id;
-            const newValue = e.target.value;
+    // 2. СОХРАНЕНИЕ В БАЗУ
+    // Слушаем изменения на всей странице. Срабатывает, когда уводишь курсор из поля.
+    document.addEventListener('change', async (event) => {
+        const target = event.target;
+        
+        // Проверяем, что изменился именно input
+        if (target.tagName === 'INPUT') {
+            const fieldId = target.id;
+            const newValue = target.value;
 
             if (fieldId) {
-                console.log(`Сохраняю ${fieldId}: ${newValue}...`);
+                console.log(`>>> Пытаюсь сохранить поле [${fieldId}] со значением [${newValue}]...`);
+                
                 const { error } = await supabase
                     .from('characters')
                     .update({ [fieldId]: newValue })
                     .eq('id', charId);
                 
                 if (error) {
-                    console.error('Ошибка сохранения:', error.message);
+                    console.error('!!! Ошибка сохранения:', error.message);
                 } else {
-                    console.log('Успешно сохранено в Supabase!');
+                    console.log(`+++ Успешно сохранено: ${fieldId}`);
                 }
             }
         }
     });
 
-    // 3. ОБНОВЛЕНИЕ В РЕАЛЬНОМ ВРЕМЕНИ (Для мастера)
+    // 3. REALTIME (Обновления от Мастера)
     supabase
-        .channel('schema-db-changes')
+        .channel('any')
         .on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
-                console.log('Мастер обновил данные:', payload.new);
+                console.log('Данные обновлены в базе (Realtime):', payload.new);
                 for (const key in payload.new) {
                     const input = document.getElementById(key);
                     if (input) {
                         input.value = payload.new[key] || '';
-                        if (window.resizeText) window.resizeText(input);
+                        if (typeof resizeText === 'function') resizeText(input);
                     }
                 }
             }
