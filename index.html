@@ -446,7 +446,12 @@
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const urlParams = new URLSearchParams(window.location.search);
-    const charId = urlParams.get('id') || 1;
+    const charId = urlParams.get('id');
+
+if (!charId) {
+    alert("Ошибка: ID персонажа не указан. Используйте ссылку вида ?id=номер");
+    // Можно также скрыть лист или перенаправить на главную
+}
 
     // 1. ЗАГРУЗКА ИЗ БАЗЫ
     async function loadCharacter() {
