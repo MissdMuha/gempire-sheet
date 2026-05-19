@@ -310,6 +310,11 @@
             flex-direction: column;
         }
 
+        /* Защита стилей от расхождений в БД: поддерживаем оба варианта написания классов */
+        .flesh-theme, .bg-flesh { background-color: #f7e6ea !important; }
+        .will-theme,  .bg-will  { background-color: #efe3fa !important; }
+        .method-theme,.bg-method { background-color: #e3f0fa !important; }
+
         .card-rich-text {
             width: 100%;
             height: 100%;
@@ -354,43 +359,12 @@
            АДАПТИВНАЯ ВЕРСТКА ДЛЯ ПЛАНШЕТОВ И ГОРИЗОНТАЛЬНОГО РЕЖИМА
            ======================================================== */
         @media (min-width: 768px) {
-            /* Шапка ХП / Воля / Броня в одну линию из 3 колонок */
-            .status-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .status-card.full-width {
-                grid-column: span 1;
-                flex-direction: column;
-                justify-content: center;
-                gap: 0;
-            }
-            
-            /* Характеристики перестраиваются в 3 параллельные колонки */
-            .attributes-stack {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 15px;
-                align-items: start;
-            }
-
-            /* Вторая вкладка делится на 2 полноценные колонки */
-            .skills-tablet-layout {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 20px;
-                align-items: start;
-            }
-            .skills-column .section-title:first-child {
-                margin-top: 0;
-            }
-
-            /* Карточки выстраиваются аккуратной плиткой (рядами) */
-            .cards-container {
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: flex-start;
-                align-items: flex-start;
-            }
+            .status-grid { grid-template-columns: repeat(3, 1fr); }
+            .status-card.full-width { grid-column: span 1; flex-direction: column; justify-content: center; gap: 0; }
+            .attributes-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: start; }
+            .skills-tablet-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+            .skills-column .section-title:first-child { margin-top: 0; }
+            .cards-container { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: flex-start; }
         }
     </style>
 </head>
@@ -516,9 +490,9 @@
     </div>
 
     <div class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('main', this)">Главное</button>
-        <button class="nav-btn" onclick="switchTab('skills', this)">Навыки</button>
-        <button class="nav-btn" onclick="switchTab('cards', this)">Карточки</button>
+        <button class="nav-btn active" onclick="switchTab('main', this)">БАЗА</button>
+        <button class="nav-btn" onclick="switchTab('skills', this)">СВОЙСТВА</button>
+        <button class="nav-btn" onclick="switchTab('cards', this)">КАРТЫ</button>
     </div>
 
     <script>
@@ -529,20 +503,16 @@
             btn.classList.add('active');
             window.scrollTo(0, 0);
             
-            // Если переключились на навыки или главное, принудительно пересчитываем высоту строк
             document.querySelectorAll('.mobile-line-textarea').forEach(el => {
                 autoExpandTextarea(el);
             });
         }
 
-        // Функция автоматического изменения высоты строки под контент
         function autoExpandTextarea(el) {
             el.style.height = 'auto';
-            // Вычисляем scrollHeight, чтобы задать точный размер блока
             el.style.height = (el.scrollHeight) + 'px';
         }
 
-        // Слушаем ввод текста для динамического расширения
         document.addEventListener('input', (e) => {
             if (e.target.classList.contains('mobile-line-textarea')) {
                 autoExpandTextarea(e.target);
@@ -562,7 +532,6 @@
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
 
-        // Подгонка текста под линовку внутри карточек способностей
         function resizeCardText(area) {
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
@@ -579,7 +548,6 @@
             }
         }
 
-        // ЗАГРУЗКА ДАННЫХ ПЕРСОНАЖА
         async function loadCharacter() {
             if (!charId) return;
             const { data } = await supabase.from('characters').select('*').eq('id', charId);
@@ -588,7 +556,6 @@
                     const input = document.getElementById(key);
                     if (input) {
                         input.value = data[0][key] || '';
-                        // После загрузки текста адаптируем высоту textarea
                         if (input.classList.contains('mobile-line-textarea')) {
                             autoExpandTextarea(input);
                         }
@@ -597,7 +564,6 @@
             }
         }
 
-        // СОХРАНЕНИЕ ДАННЫХ ПРИ ИЗМЕНЕНИИ ПОЛЕЙ
         document.addEventListener('change', async (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 const fieldId = e.target.id;
@@ -607,7 +573,6 @@
             }
         });
 
-        // REALTIME ОБНОВЛЕНИЯ (От Мастера)
         supabase.channel('any').on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
@@ -623,7 +588,6 @@
             }
         ).subscribe();
 
-        // ЗАГРУЗКА КАРТОЧЕК ИНВЕНТАРЯ
         async function loadCards() {
             if (!charId) return;
             const { data: cards } = await supabase.from('cards').select('*').eq('owner_id', charId);
@@ -636,6 +600,7 @@
             }
 
             cards.forEach(card => {
+                const safeTheme = card.theme ? card.theme.trim() : '';
                 const html = `
                     <div class="card">
                         <div class="card-frame">
@@ -646,10 +611,10 @@
                                 </div>
                                 <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                             </div>
-                            <div class="card-body ${card.theme || ''}">
+                            <div class="card-body ${safeTheme}">
                                 <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
                             </div>
-                            <div class="card-footer ${card.theme || ''}">
+                            <div class="card-footer ${safeTheme}">
                                 <div class="footer-label">ТЭГИ</div>
                                 <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
                             </div>
