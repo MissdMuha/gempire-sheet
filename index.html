@@ -14,7 +14,8 @@
         body {
             background-color: #2b2b2b;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -30,6 +31,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             position: relative;
             overflow: hidden;
+            flex-shrink: 0;
         }
         
         .serif-font {
@@ -39,8 +41,9 @@
         @page { size: A4; margin: 0; }
         @media print {
             body { background-color: transparent; padding: 0; margin: 0; }
-            .sheet { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; }
+            .sheet { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; page-break-after: always; }
             input { background: transparent !important; }
+            .cards-view-section { margin-top: 0; }
         }
 
         /* Шапка */
@@ -255,6 +258,136 @@
             flex-direction: column;
         }
 
+
+        /* --- СТИЛИ ДЛЯ КАРТОЧЕК --- */
+        .cards-view-section {
+            margin-top: 40px;
+            width: 210mm; 
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+
+        .card {
+            background-color: #fbf6ec; 
+            width: 63.5mm;
+            height: 88.9mm;
+            border: 1px solid rgba(69, 63, 60, 0.1);
+            border-radius: 8px;
+            padding: 2.2mm; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+            page-break-inside: avoid;
+        }
+
+        .card-frame {
+            height: 100%;
+            border: 2px solid #453f3c; 
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card-header {
+            background-color: #635a55;
+            padding: 8px 10px 6px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #453f3c;
+            height: 48px;
+            flex-shrink: 0;
+        }
+
+        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .card-label-display {
+            font-size: 9px; text-transform: uppercase; font-weight: bold;
+            letter-spacing: 0.5px; color: #dcd3cb;
+        }
+
+        .card-title-display {
+            font-family: 'Constantia', 'Georgia', serif; font-size: 15px; font-weight: bold;
+            color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .card-tag-box {
+            width: 30px; height: 30px; 
+            background-color: #fbf6ec; 
+            border: 1px solid #453f3c; 
+            border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .card-tag-display {
+            font-size: 16px; 
+            font-family: 'Constantia', 'Georgia', serif; font-weight: bold;
+            color: #2c2825;
+            line-height: 1;
+            transform: translateY(0.5px); 
+        }
+
+        .card-body {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 13px;
+            font-family: 'Constantia', 'Cambria', 'Georgia', serif;
+            color: #2c2825;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        
+        .card-body b, .card-body strong {
+            font-weight: 800;
+            color: #000;
+        }
+
+        .card-footer {
+            border-top: 1px dashed rgba(69, 63, 60, 0.25);
+            padding: 3px 10px 5px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 36px;
+            flex-shrink: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-label {
+            font-size: 7px;
+            font-weight: 800;
+            color: #8a807a;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+        }
+
+        .card-footer-tags-display {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            color: #453f3c;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .flesh-theme { background-color: #f7e6ea; }
+        .will-theme  { background-color: #efe3fa; }
+        .method-theme { background-color: #e3f0fa; }
     </style>
 </head>
 <body>
@@ -393,6 +526,14 @@
         </div>
     </div>
 
+    <div class="cards-view-section">
+        <h2 style="color: #fbf6ec; font-family: 'Georgia', serif; border-bottom: 1px solid #635a55; padding-bottom: 10px; text-align: center; margin: 0;">
+            Инвентарь Способностей
+        </h2>
+        <div id="cards-container" class="cards-container">
+            </div>
+    </div>
+
     <script>
         function resizeText(input) {
             let ruler = document.getElementById('text-ruler');
@@ -448,12 +589,11 @@
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
 
-if (!charId) {
-    alert("Ошибка: ID персонажа не указан. Используйте ссылку вида ?id=номер");
-    // Можно также скрыть лист или перенаправить на главную
-}
+    if (!charId) {
+        alert("Ошибка: ID персонажа не указан. Используйте ссылку вида ?id=номер");
+    }
 
-    // 1. ЗАГРУЗКА ИЗ БАЗЫ
+    // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа)
     async function loadCharacter() {
         console.log("Начинаю загрузку для ID:", charId);
         const { data, error } = await supabase
@@ -475,12 +615,10 @@ if (!charId) {
         }
     }
 
-    // 2. СОХРАНЕНИЕ В БАЗУ
-    // Слушаем изменения на всей странице. Срабатывает, когда уводишь курсор из поля.
+    // 2. СОХРАНЕНИЕ В БАЗУ (Лист персонажа)
     document.addEventListener('change', async (event) => {
         const target = event.target;
         
-        // Проверяем, что изменился именно input
         if (target.tagName === 'INPUT') {
             const fieldId = target.id;
             const newValue = target.value;
@@ -520,7 +658,60 @@ if (!charId) {
         )
         .subscribe();
 
+    // 4. ЗАГРУЗКА КАРТОЧЕК
+    async function loadCards() {
+        if (!charId) return;
+        console.log("Загружаю карточки для ID:", charId);
+        
+        const { data: cards, error } = await supabase
+            .from('cards')
+            .select('*')
+            .eq('owner_id', charId);
+
+        if (error) {
+            console.error("Ошибка загрузки карточек:", error.message);
+            return;
+        }
+
+        const container = document.getElementById('cards-container');
+        container.innerHTML = ''; 
+
+        if (!cards || cards.length === 0) {
+            container.innerHTML = '<p style="color: #8a807a; font-family: sans-serif; text-align: center; width: 100%;">У этого персонажа пока нет активных карточек.</p>';
+            return;
+        }
+
+        cards.forEach(card => {
+            const html = `
+                <div class="card">
+                    <div class="card-frame">
+                        <div class="card-header">
+                            <div class="card-title-box">
+                                <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
+                                <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                            </div>
+                            <div class="card-tag-box">
+                                <div class="card-tag-display">${card.card_tag || ''}</div>
+                            </div>
+                        </div>
+                        <div class="card-body ${card.theme || ''}">
+                            ${card.card_description || ''}
+                        </div>
+                        <div class="card-footer ${card.theme || ''}">
+                            <div class="footer-label">ТЭГИ</div>
+                            <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    // Вызываем функции загрузки
     loadCharacter();
+    loadCards();
+
 </script>
 </body>
 </html>
