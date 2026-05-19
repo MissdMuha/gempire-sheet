@@ -46,9 +46,9 @@
             background-color: #453f3c;
             color: #fbf6ec;
             border: 1px solid rgba(251, 246, 236, 0.2);
-            padding: 8px 10px; /* Уменьшили боковые отступы, чтобы кнопка стала уже */
+            padding: 8px 10px;
             border-radius: 6px;
-            font-size: 18px; /* Немного увеличили само эмодзи для удобства */
+            font-size: 18px; 
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             z-index: 1000;
@@ -67,7 +67,7 @@
             .sheet { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; page-break-after: always; }
             input { background: transparent !important; }
             .cards-view-section { margin-top: 0; }
-            .switch-version-btn { display: none; } /* Прячем кнопку при печати */
+            .switch-version-btn { display: none; } 
         }
 
         /* Шапка */
@@ -382,7 +382,7 @@
             height: 100%;
             background: transparent;
             font-family: 'Constantia', 'Cambria', 'Georgia', serif;
-            font-size: 14px; /* Стартовый размер */
+            font-size: 14px; 
             font-weight: 400;
             color: #2c2825;
             padding: 0;
@@ -390,11 +390,9 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             
-            /* Переменная межстрочного интервала */
             --lh: 24px; 
             line-height: var(--lh);
 
-            /* Линовка жестко привязана к переменной */
             background-image: repeating-linear-gradient(
                 transparent,
                 transparent calc(var(--lh) - 1px),
@@ -438,6 +436,40 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ КАРТОЧЕК --- */
+        .card-link {
+            color: #4a76a8; 
+            text-decoration: underline;
+            text-decoration-style: dashed;
+            cursor: pointer;
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+        .card-link:hover { color: #2c4a6b; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            display: none; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; transition: opacity 0.2s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        
+        .modal-content {
+            position: relative;
+            transform: scale(1.1); 
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content { transform: scale(1); } 
+        }
+
+        .modal-close-btn {
+            position: absolute; top: -35px; right: -20px;
+            background: transparent; border: none; color: #fbf6ec;
+            font-size: 30px; cursor: pointer; font-weight: bold;
         }
     </style>
 </head>
@@ -589,6 +621,14 @@
             </div>
     </div>
 
+    <div id="card-modal-overlay" class="modal-overlay" onclick="closeCardModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close-btn" onclick="closeCardModal()">×</button>
+            <div id="modal-card-container">
+                </div>
+        </div>
+    </div>
+
     <script>
         // Ресайз для полей листа персонажа
         function resizeText(input) {
@@ -625,10 +665,10 @@
             input.style.fontSize = currentFontSize + 'px';
         }
 
-        // Авто-ресайз текста на карточках (Шрифт + Межстрочный интервал)
+        // Авто-ресайз текста на карточках
         function resizeTextArea(area) {
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
-            const lhRatio = 1.7; // Коэффициент идеальной линовки для Georgia/Constantia
+            const lhRatio = 1.7; 
 
             const update = (fs) => {
                 area.style.fontSize = fs + 'px';
@@ -637,7 +677,6 @@
 
             update(currentFS);
             
-            // Если текст не влезает в карточку по высоте, уменьшаем его с шагом 0.5px
             while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
@@ -663,6 +702,61 @@
     if (!charId) {
         alert("Ошибка: ID персонажа не указан. Используйте ссылку вида ?id=номер");
     }
+
+    // Обработка гиперссылок [[Название]]
+    window.parseCardLinks = function(text) {
+        if (!text) return '';
+        return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link" onclick="openCardModal(\'$1\')">$1</span>');
+    }
+
+    // Открытие модального окна с карточкой
+    window.openCardModal = async function(title) {
+        const overlay = document.getElementById('card-modal-overlay');
+        const container = document.getElementById('modal-card-container');
+        container.innerHTML = '<div style="color: #fbf6ec; font-family: sans-serif; background: #38332f; padding: 20px; border-radius: 8px;">Ищем способность...</div>';
+        overlay.classList.add('active');
+
+        // Ищем в базе
+        const { data, error } = await supabase.from('cards').select('*').ilike('card_title', title).limit(1);
+
+        if (error || !data || data.length === 0) {
+            container.innerHTML = `<div style="background: #fbf6ec; padding: 20px; border-radius: 8px; color: #453f3c; font-family: sans-serif;">Карточка <b>«${title}»</b> не найдена в базе.</div>`;
+            return;
+        }
+
+        const card = data[0];
+        const safeTheme = card.theme ? card.theme.trim() : '';
+        
+        container.innerHTML = `
+            <div class="card" style="margin: 0; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+                <div class="card-frame">
+                    <div class="card-header">
+                        <div class="card-title-box">
+                            <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
+                            <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                        </div>
+                        <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                    </div>
+                    <div class="card-body ${safeTheme}">
+                        <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
+                    </div>
+                    <div class="card-footer ${safeTheme}">
+                        <div class="footer-label">ТЭГИ</div>
+                        <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setTimeout(() => {
+            const area = container.querySelector('.auto-resize-area');
+            if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
+        }, 50);
+    };
+
+    window.closeCardModal = function() {
+        document.getElementById('card-modal-overlay').classList.remove('active');
+    };
 
     // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа)
     async function loadCharacter() {
@@ -710,7 +804,7 @@
         )
         .subscribe();
 
-    // 4. ЗАГРУЗКА КАРТОЧЕК С НОВЫМ ДИЗАЙНОМ И АВТО-РЕСАЙЗОМ
+    // 4. ЗАГРУЗКА КАРТОЧЕК С НОВЫМ ДИЗАЙНОМ, АВТО-РЕСАЙЗОМ И ССЫЛКАМИ
     async function loadCards() {
         if (!charId) return;
         
@@ -730,6 +824,7 @@
         }
 
         cards.forEach(card => {
+            const safeTheme = card.theme ? card.theme.trim() : '';
             const html = `
                 <div class="card">
                     <div class="card-frame">
@@ -742,10 +837,10 @@
                                 <div class="card-tag-display">${card.card_tag || ''}</div>
                             </div>
                         </div>
-                        <div class="card-body ${card.theme || ''}">
-                            <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
+                        <div class="card-body ${safeTheme}">
+                            <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                         </div>
-                        <div class="card-footer ${card.theme || ''}">
+                        <div class="card-footer ${safeTheme}">
                             <div class="footer-label">ТЭГИ</div>
                             <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
                         </div>
@@ -755,7 +850,7 @@
             container.insertAdjacentHTML('beforeend', html);
         });
 
-        // После того как HTML вставлен, запускаем подгонку текста к линовке
+        // Запускаем подгонку текста к линовке
         container.querySelectorAll('.auto-resize-area').forEach(el => {
             resizeTextArea(el);
         });
