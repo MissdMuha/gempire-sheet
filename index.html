@@ -97,7 +97,7 @@
             margin: 0 4px;
         }
         
-        /* Характеристики (Цвета и Порядок) */
+        /* Характеристики */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -105,7 +105,6 @@
             margin-bottom: 14px;
         }
         
-        /* Плоть: теперь холодный оттенок */
         .bg-flesh { background-color: #f7e6ea; border: 1.5px solid #d4a3ae; }  
         .bg-will { background-color: #efe3fa; border: 1.5px solid #bfa5df; } 
         .bg-method { background-color: #e3f0fa; border: 1.5px solid #a5c6df; } 
@@ -281,13 +280,15 @@
             height: 88.9mm;
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
+            display: flex;
             padding: 2.2mm; 
+            position: relative;
             box-shadow: 0 6px 15px rgba(0,0,0,0.5);
             page-break-inside: avoid;
         }
 
         .card-frame {
-            height: 100%;
+            flex-grow: 1;
             border: 2px solid #453f3c; 
             border-radius: 6px;
             display: flex;
@@ -335,28 +336,55 @@
             color: #2c2825;
             line-height: 1;
             transform: translateY(0.5px); 
+        }
 
-.card-body {
-    flex-grow: 1;
-    padding: 0 10px; /* Убираем вертикальный паддинг, будем регулировать его через line-height */
-    margin-top: 5px; /* Небольшой отступ от шапки */
-    
-    font-size: 14px; 
-    font-family: 'Constantia', 'Cambria', 'Georgia', serif;
-    color: #2c2825;
-    
-    /* Жесткая сетка */
-    line-height: 24px; 
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow: hidden;
+        /* Темы карточек */
+        .flesh-theme { background-color: #f7e6ea; }
+        .will-theme  { background-color: #efe3fa; }
+        .method-theme { background-color: #e3f0fa; }
 
-    /* Отрисовка линий через сплошной цвет и тонкую границу внизу каждой строки */
-    background-image: linear-gradient(rgba(69, 63, 60, 0.1) 1px, transparent 1px);
-    background-size: 100% 24px;
-    /* Сдвигаем фон так, чтобы линия была ПОД текстом */
-    background-position: 0 23px; 
-}
+        .card-body {
+            flex-grow: 1;
+            position: relative;
+            padding: 0 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Тот самый магический блок с привязкой текста к линовке */
+        .card-rich-text {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-family: 'Constantia', 'Cambria', 'Georgia', serif;
+            font-size: 14px; /* Стартовый размер */
+            font-weight: 400;
+            color: #2c2825;
+            padding: 0;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            
+            /* Переменная межстрочного интервала */
+            --lh: 24px; 
+            line-height: var(--lh);
+
+            /* Линовка жестко привязана к переменной */
+            background-image: repeating-linear-gradient(
+                transparent,
+                transparent calc(var(--lh) - 1px),
+                rgba(69, 63, 60, 0.15) calc(var(--lh) - 1px),
+                rgba(69, 63, 60, 0.15) var(--lh)
+            );
+            background-attachment: local;
+        }
+
+        .card-rich-text b, .card-rich-text strong {
+            font-weight: 800;
+            color: #000;
+        }
+
         .card-footer {
             border-top: 1px dashed rgba(69, 63, 60, 0.25);
             padding: 3px 10px 5px 10px;
@@ -387,10 +415,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        .flesh-theme { background-color: #f7e6ea; }
-        .will-theme  { background-color: #efe3fa; }
-        .method-theme { background-color: #e3f0fa; }
     </style>
 </head>
 <body>
@@ -538,6 +562,7 @@
     </div>
 
     <script>
+        // Ресайз для полей листа персонажа
         function resizeText(input) {
             let ruler = document.getElementById('text-ruler');
             if (!ruler) {
@@ -572,17 +597,32 @@
             input.style.fontSize = currentFontSize + 'px';
         }
 
+        // Авто-ресайз текста на карточках (Шрифт + Межстрочный интервал)
+        function resizeTextArea(area) {
+            let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
+            const lhRatio = 1.7; // Коэффициент идеальной линовки для Georgia/Constantia
+
+            const update = (fs) => {
+                area.style.fontSize = fs + 'px';
+                area.style.setProperty('--lh', (fs * lhRatio) + 'px');
+            };
+
+            update(currentFS);
+            
+            // Если текст не влезает в карточку по высоте, уменьшаем его с шагом 0.5px
+            while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
+                currentFS -= 0.5;
+                update(currentFS);
+            }
+        }
+
         document.querySelectorAll('.auto-resize').forEach(input => {
-            input.addEventListener('input', function() {
-                resizeText(this);
-            });
-            window.addEventListener('resize', function() {
-                resizeText(input);
-            });
+            input.addEventListener('input', function() { resizeText(this); });
+            window.addEventListener('resize', function() { resizeText(input); });
             setTimeout(() => resizeText(input), 50);
         });
     </script>
-	<script type="module">
+    <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
     const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
@@ -598,16 +638,11 @@
 
     // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа)
     async function loadCharacter() {
-        console.log("Начинаю загрузку для ID:", charId);
-        const { data, error } = await supabase
-            .from('characters')
-            .select('*')
-            .eq('id', charId);
+        if (!charId) return;
+        const { data, error } = await supabase.from('characters').select('*').eq('id', charId);
 
         if (data && data.length > 0) {
             const character = data[0];
-            console.log("Данные из базы получены:", character);
-            
             for (const key in character) {
                 const input = document.getElementById(key);
                 if (input) {
@@ -621,24 +656,11 @@
     // 2. СОХРАНЕНИЕ В БАЗУ (Лист персонажа)
     document.addEventListener('change', async (event) => {
         const target = event.target;
-        
         if (target.tagName === 'INPUT') {
             const fieldId = target.id;
             const newValue = target.value;
-
             if (fieldId) {
-                console.log(`>>> Пытаюсь сохранить поле [${fieldId}] со значением [${newValue}]...`);
-                
-                const { error } = await supabase
-                    .from('characters')
-                    .update({ [fieldId]: newValue })
-                    .eq('id', charId);
-                
-                if (error) {
-                    console.error('!!! Ошибка сохранения:', error.message);
-                } else {
-                    console.log(`+++ Успешно сохранено: ${fieldId}`);
-                }
+                await supabase.from('characters').update({ [fieldId]: newValue }).eq('id', charId);
             }
         }
     });
@@ -649,7 +671,6 @@
         .on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
-                console.log('Данные обновлены в базе (Realtime):', payload.new);
                 for (const key in payload.new) {
                     const input = document.getElementById(key);
                     if (input) {
@@ -661,15 +682,11 @@
         )
         .subscribe();
 
-    // 4. ЗАГРУЗКА КАРТОЧЕК
+    // 4. ЗАГРУЗКА КАРТОЧЕК С НОВЫМ ДИЗАЙНОМ И АВТО-РЕСАЙЗОМ
     async function loadCards() {
         if (!charId) return;
-        console.log("Загружаю карточки для ID:", charId);
         
-        const { data: cards, error } = await supabase
-            .from('cards')
-            .select('*')
-            .eq('owner_id', charId);
+        const { data: cards, error } = await supabase.from('cards').select('*').eq('owner_id', charId);
 
         if (error) {
             console.error("Ошибка загрузки карточек:", error.message);
@@ -698,7 +715,7 @@
                             </div>
                         </div>
                         <div class="card-body ${card.theme || ''}">
-                            ${card.card_description || ''}
+                            <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
                         </div>
                         <div class="card-footer ${card.theme || ''}">
                             <div class="footer-label">ТЭГИ</div>
@@ -709,12 +726,15 @@
             `;
             container.insertAdjacentHTML('beforeend', html);
         });
+
+        // После того как HTML вставлен, запускаем подгонку текста к линовке
+        container.querySelectorAll('.auto-resize-area').forEach(el => {
+            resizeTextArea(el);
+        });
     }
 
-    // Вызываем функции загрузки
     loadCharacter();
     loadCards();
-
-</script>
+    </script>
 </body>
 </html>
