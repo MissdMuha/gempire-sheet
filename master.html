@@ -16,7 +16,7 @@
             align-items: center;
         }
 
-        h1 { border-bottom: 2px solid #635a55; padding-bottom: 10px; font-family: 'Georgia', serif; }
+        h1 { border-bottom: 2px solid #635a55; padding-bottom: 10px; font-family: 'Georgia', serif; text-align: center; }
 
         .admin-container {
             display: flex;
@@ -45,7 +45,7 @@
             outline: none;
         }
         input:focus, select:focus, textarea:focus { border-color: #dcd3cb; }
-        textarea { resize: vertical; min-height: 100px; }
+        textarea { resize: vertical; min-height: 120px; }
 
         .btn-submit {
             background-color: #635a55;
@@ -62,39 +62,53 @@
         }
         .btn-submit:hover { background-color: #7a706a; }
 
-        /* Предпросмотр карточки (копия стилей из листа) */
+        /* Идентичные стили для карточек (Предпросмотр + Список) */
         .preview-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .card {
             background-color: #fbf6ec; width: 63.5mm; height: 88.9mm;
             border: 1px solid rgba(69, 63, 60, 0.1); border-radius: 8px;
             display: flex; padding: 2.2mm; box-shadow: 0 6px 15px rgba(0,0,0,0.5);
-            color: #2c2825;
+            color: #2c2825; flex-shrink: 0;
         }
-        .card-frame { flex-grow: 1; border: 2px solid #453f3c; border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; }
-        .card-header { background-color: #635a55; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #453f3c; height: 48px; }
-        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; }
+        .card-frame { flex-grow: 1; border: 2px solid #453f3c; border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; position: relative;}
+        .card-header { background-color: #635a55; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #453f3c; height: 48px; flex-shrink: 0;}
+        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; justify-content: center;}
+        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; letter-spacing: 0.5px;}
         .card-title-display { font-family: 'Constantia', 'Georgia', serif; font-size: 15px; font-weight: bold; color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-tag-box { width: 30px; height: 30px; background-color: #fbf6ec; border: 1px solid #453f3c; border-radius: 5px; display: flex; align-items: center; justify-content: center; box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3); }
-        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; }
-        .card-body { flex-grow: 1; padding: 0 10px; display: flex; flex-direction: column; }
-        .flesh-theme { background-color: #f7e6ea; } .will-theme { background-color: #efe3fa; } .method-theme { background-color: #e3f0fa; }
+        .card-tag-box { width: 30px; height: 30px; background-color: #fbf6ec; border: 1px solid #453f3c; border-radius: 5px; display: flex; align-items: center; justify-content: center; box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3); flex-shrink: 0;}
+        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; transform: translateY(0.5px);}
+        
+        .card-body { flex-grow: 1; position: relative; padding: 0 10px; overflow: hidden; display: flex; flex-direction: column; }
+        
+        .flesh-theme { background-color: #f7e6ea; } 
+        .will-theme { background-color: #efe3fa; } 
+        .method-theme { background-color: #e3f0fa; }
+        
         .card-rich-text {
-            width: 100%; height: 100%; font-family: 'Constantia', 'Cambria', 'Georgia', serif;
-            font-size: 14px; white-space: pre-wrap; word-wrap: break-word;
+            width: 100%; height: 100%; background: transparent;
+            font-family: 'Constantia', 'Cambria', 'Georgia', serif; font-size: 14px; font-weight: 400; color: #2c2825;
+            padding: 0; overflow: hidden; white-space: pre-wrap; word-wrap: break-word;
             --lh: 24px; line-height: var(--lh);
             background-image: repeating-linear-gradient(transparent, transparent calc(var(--lh) - 1px), rgba(69, 63, 60, 0.15) calc(var(--lh) - 1px), rgba(69, 63, 60, 0.15) var(--lh));
+            background-attachment: local;
         }
-        .card-footer { border-top: 1px dashed rgba(69, 63, 60, 0.25); padding: 3px 10px 5px 10px; display: flex; flex-direction: column; justify-content: center; height: 36px; background-color: rgba(255, 255, 255, 0.1); }
+        .card-rich-text b, .card-rich-text strong { font-weight: 800; color: #000; }
+        
+        .card-footer { border-top: 1px dashed rgba(69, 63, 60, 0.25); padding: 3px 10px 5px 10px; display: flex; flex-direction: column; justify-content: center; height: 36px; background-color: rgba(255, 255, 255, 0.1); flex-shrink: 0;}
         .footer-label { font-size: 7px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px; }
         .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* Список существующих карточек */
-        .cards-list-container { width: 100%; max-width: 1000px; }
-        .cards-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; }
-        .mini-card-wrapper { display: flex; flex-direction: column; gap: 10px; align-items: center; background: #38332f; padding: 10px; border-radius: 10px; }
-        .owner-badge { background: #635a55; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 5px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
+        .cards-list-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center;}
+        .cards-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;}
+        .mini-card-wrapper { display: flex; flex-direction: column; gap: 10px; align-items: center; background: #38332f; padding: 10px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .owner-badge { background: #635a55; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #fbf6ec;}
+        
+        /* Кнопки управления карточкой */
+        .card-controls { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 5px; }
+        .btn-copy { background-color: #a5c6df; color: #2b2b2b; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-copy:hover { background-color: #8db5d2; }
+        .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-delete:hover { background-color: #c78b98; }
     </style>
 </head>
@@ -105,8 +119,8 @@
     <div class="admin-container">
         <form class="form-section" id="add-card-form">
             <div class="form-group">
-                <label>ID Персонажа (Кому выдать)</label>
-                <input type="text" id="input_owner_id" placeholder="Например: 1 или 404-elf" required>
+                <label>ID Игрока (Кому выдать)</label>
+                <input type="text" id="input_owner_id" placeholder="Например: 1, 404-elf" required>
             </div>
             <div class="form-group">
                 <label>Тема (Цвет)</label>
@@ -142,20 +156,20 @@
         </form>
 
         <div class="preview-section">
-            <label>Предпросмотр карточки</label>
+            <label style="color: #a5c6df;">Предпросмотр карточки</label>
             <div class="card">
                 <div class="card-frame">
                     <div class="card-header">
                         <div class="card-title-box">
                             <div class="card-label-display" id="prev_label">НАВЫК</div>
-                            <div class="card-title-display" id="prev_title">Название</div>
+                            <div class="card-title-display" id="prev_title">Без названия</div>
                         </div>
                         <div class="card-tag-box"><div class="card-tag-display" id="prev_tag"></div></div>
                     </div>
                     <div class="card-body flesh-theme" id="prev_theme">
-                        <div class="card-rich-text" id="prev_desc"></div>
+                        <div class="card-rich-text" id="prev_desc" data-max-size="14"></div>
                     </div>
-                    <div class="card-footer" id="prev_footer_theme">
+                    <div class="card-footer">
                         <div class="footer-label">ТЭГИ</div>
                         <div class="card-footer-tags-display" id="prev_footer"></div>
                     </div>
@@ -165,7 +179,7 @@
     </div>
 
     <div class="cards-list-container">
-        <h1>Выданные карточки</h1>
+        <h1>Выданные карточки в игре</h1>
         <div class="cards-grid" id="existing-cards-grid">
             </div>
     </div>
@@ -177,20 +191,47 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        // Обновление предпросмотра
+        // Функция точного авто-ресайза текста (идентична листам игроков)
+        function resizeCardText(area) {
+            if(!area) return;
+            let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
+            const lhRatio = 1.7; 
+
+            const update = (fs) => {
+                area.style.fontSize = fs + 'px';
+                area.style.setProperty('--lh', (fs * lhRatio) + 'px');
+            };
+
+            update(currentFS);
+            while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
+                currentFS -= 0.5;
+                update(currentFS);
+            }
+        }
+
+        // Живое обновление предпросмотра
         window.updatePreview = function() {
             document.getElementById('prev_label').innerText = document.getElementById('input_label').value || 'НАВЫК';
             document.getElementById('prev_title').innerText = document.getElementById('input_title').value || 'Без названия';
             document.getElementById('prev_tag').innerText = document.getElementById('input_tag').value;
-            document.getElementById('prev_desc').innerHTML = document.getElementById('input_description').value.replace(/\n/g, '<br>');
+            
+            // Вставляем текст напрямую (браузер сам корректно обработает \n благодаря white-space: pre-wrap)
+            const descBox = document.getElementById('prev_desc');
+            descBox.innerHTML = document.getElementById('input_description').value; 
+            
             document.getElementById('prev_footer').innerText = document.getElementById('input_footer').value;
             
             const theme = document.getElementById('input_theme').value;
-            const body = document.getElementById('prev_theme');
-            body.className = `card-body ${theme}`;
+            document.getElementById('prev_theme').className = `card-body ${theme}`;
+            
+            // Подгоняем текст под линовку карточки
+            resizeCardText(descBox);
         };
         
         document.getElementById('input_theme').addEventListener('change', window.updatePreview);
+
+        // Храним карточки в памяти для копирования
+        window.allCards = []; 
 
         // Функция загрузки всех карточек
         async function fetchCards() {
@@ -199,14 +240,17 @@
             grid.innerHTML = '';
 
             if (error) {
-                grid.innerHTML = `<p>Ошибка загрузки: ${error.message}</p>`;
+                grid.innerHTML = `<p style="color: red;">Ошибка загрузки базы: ${error.message}</p>`;
                 return;
             }
 
+            window.allCards = cards;
+
             cards.forEach(card => {
+                const safeTheme = card.theme ? card.theme.trim() : '';
                 const html = `
                     <div class="mini-card-wrapper">
-                        <div class="owner-badge">ID: ${card.owner_id}</div>
+                        <div class="owner-badge">Владелец: ${card.owner_id}</div>
                         <div class="card">
                             <div class="card-frame">
                                 <div class="card-header">
@@ -216,8 +260,8 @@
                                     </div>
                                     <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                                 </div>
-                                <div class="card-body ${card.theme || ''}">
-                                    <div class="card-rich-text">${card.card_description || ''}</div>
+                                <div class="card-body ${safeTheme}">
+                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${card.card_description || ''}</div>
                                 </div>
                                 <div class="card-footer">
                                     <div class="footer-label">ТЭГИ</div>
@@ -225,17 +269,56 @@
                                 </div>
                             </div>
                         </div>
-                        <button class="btn-delete" onclick="deleteCard('${card.id}')">Удалить карточку</button>
+                        <div class="card-controls">
+                            <button class="btn-copy" onclick="copyToForm('${card.id}')">Взять как шаблон</button>
+                            <button class="btn-delete" onclick="deleteCard('${card.id}')">Удалить у игрока</button>
+                        </div>
                     </div>
                 `;
                 grid.insertAdjacentHTML('beforeend', html);
             });
+
+            // Авторесайз для всех карточек в списке
+            setTimeout(() => {
+                grid.querySelectorAll('.auto-resize-area').forEach(el => {
+                    resizeCardText(el);
+                });
+            }, 100);
         }
 
-        // Отправка формы (Добавление карточки)
+        // Функция копирования в форму (доступна глобально)
+        window.copyToForm = function(cardId) {
+            const card = window.allCards.find(c => c.id === cardId);
+            if(card) {
+                if (card.theme) {
+                    const themeSelect = document.getElementById('input_theme');
+                    const options = Array.from(themeSelect.options).map(o => o.value);
+                    if(options.includes(card.theme.trim())) {
+                        themeSelect.value = card.theme.trim();
+                    }
+                }
+                
+                document.getElementById('input_label').value = card.card_label || '';
+                document.getElementById('input_title').value = card.card_title || '';
+                document.getElementById('input_tag').value = card.card_tag || '';
+                document.getElementById('input_description').value = card.card_description || '';
+                document.getElementById('input_footer').value = card.card_footer_tags || '';
+                
+                window.updatePreview();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                const statusMsg = document.getElementById('status-msg');
+                statusMsg.style.color = '#a5c6df';
+                statusMsg.innerText = 'Карточка перенесена в форму!';
+                setTimeout(() => statusMsg.innerText = '', 3000);
+            }
+        };
+
+        // Отправка формы (Добавление карточки в базу)
         document.getElementById('add-card-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const statusMsg = document.getElementById('status-msg');
+            statusMsg.style.color = '#a5c6df';
             statusMsg.innerText = 'Отправка...';
 
             const newCard = {
@@ -255,28 +338,28 @@
                 statusMsg.innerText = `Ошибка: ${error.message}`;
             } else {
                 statusMsg.style.color = '#a5c6df';
-                statusMsg.innerText = 'Успешно выдано!';
+                statusMsg.innerText = 'Успешно выдано игроку!';
                 setTimeout(() => statusMsg.innerText = '', 3000);
                 
-                // Очищаем форму, оставляем только ID для удобства выдачи серии карточек
+                // Очищаем форму, но оставляем ID, чтобы было удобно выдать серию карточек одному игроку
                 document.getElementById('input_title').value = '';
                 document.getElementById('input_tag').value = '';
                 document.getElementById('input_description').value = '';
                 document.getElementById('input_footer').value = '';
                 window.updatePreview();
-                fetchCards(); // Обновляем список
+                fetchCards(); 
             }
         });
 
-        // Функция удаления карточки (доступна глобально через window)
+        // Функция удаления карточки
         window.deleteCard = async function(cardId) {
-            if(confirm('Точно удалить эту карточку у игрока?')) {
+            if(confirm('Точно удалить эту карточку у игрока навсегда?')) {
                 await supabase.from('cards').delete().eq('id', cardId);
                 fetchCards();
             }
         };
 
-        // Инициализация
+        // Инициализация при загрузке страницы
         fetchCards();
         window.updatePreview();
     </script>
