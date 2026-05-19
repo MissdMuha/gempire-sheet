@@ -349,9 +349,29 @@
             line-height: 1.4;
         }
         
-        .card-body b, .card-body strong {
-            font-weight: 800;
-            color: #000;
+       .card-body {
+    flex-grow: 1;
+    padding: 10px;
+    font-size: 14px; /* Фиксируем размер для попадания в строки */
+    font-family: 'Constantia', 'Cambria', 'Georgia', serif;
+    color: #2c2825;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    
+    /* Устанавливаем высоту строки ровно 24px */
+    line-height: 24px; 
+    
+    /* Делаем фон, который совпадает с высотой строки */
+    background-image: repeating-linear-gradient(
+        transparent,
+        transparent 23px,
+        rgba(69, 63, 60, 0.1) 23px,
+        rgba(69, 63, 60, 0.1) 24px
+    );
+    background-size: 100% 24px;
+    background-attachment: local;
+}
         }
 
         .card-footer {
