@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Лист Персонажа - Gempire Roll</title>
+    <style>
+        /* Сброс и жесткий контроль размеров */
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        body {
+            background-color: #2b2b2b;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            color: #453f3c;
+        }
+        
+        /* Параметры под А4 */
+        .sheet {
+            background-color: #fbf6ec; 
+            width: 210mm; 
+            height: 297mm; 
+            padding: 10mm 15mm; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .serif-font {
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        @page { size: A4; margin: 0; }
+        @media print {
+            body { background-color: transparent; padding: 0; margin: 0; }
+            .sheet { box-shadow: none; border-radius: 0; width: 210mm; height: 297mm; }
+            input { background: transparent !important; }
+        }
+
+        /* Шапка */
+        .header-grid {
+            display: grid;
+            grid-template-columns: 2.5fr 1fr 1fr 1.2fr; 
+            gap: 20px;
+            margin-bottom: 14px;
+        }
+        .header-cell {
+            border-bottom: 2px solid #453f3c;
+            height: 52px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-bottom: 2px;
+        }
+        .header-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #7a706a;
+            text-align: center;
+        }
+        .header-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            font-family: 'Georgia', serif;
+            font-size: 22px; 
+            font-weight: bold;
+            color: #2c2825; 
+            width: 100%;
+            padding: 0;
+            text-align: center;
+        }
+
+        /* Обёртка для разделенных полей ХП и Воли */
+        .split-input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .split-slash {
+            font-family: 'Georgia', serif;
+            font-size: 20px;
+            font-weight: normal;
+            color: #7a706a;
+            margin: 0 4px;
+        }
+        
+        /* Характеристики (Цвета и Порядок) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 14px;
+        }
+        
+        /* Плоть: теперь холодный оттенок */
+        .bg-flesh { background-color: #f7e6ea; border: 1.5px solid #d4a3ae; }  
+        .bg-will { background-color: #efe3fa; border: 1.5px solid #bfa5df; } 
+        .bg-method { background-color: #e3f0fa; border: 1.5px solid #a5c6df; } 
+
+        .stat-box {
+            padding: 8px 15px; 
+            border-radius: 8px; 
+            font-weight: bold;
+            font-size: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center;
+        }
+        
+        .stat-value {
+            width: 42px;
+            height: 42px;
+            background: #ffffff;
+            border: 1.5px solid #453f3c;
+            border-radius: 6px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .stat-input {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 22px; 
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+            color: #2c2825;
+        }
+
+        /* Разделы */
+        .section-wrapper {
+            border: 1.5px solid #453f3c;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            overflow: hidden; 
+            background-color: #fbf6ec;
+        }
+
+        .section-header {
+            background-color: #635a55; 
+            color: #fbf6ec; 
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            letter-spacing: 1px;
+            border-bottom: 1.5px solid #453f3c;
+        }
+
+        .skill-desc {
+            font-size: 11px;
+            font-weight: normal;
+            color: #dcd3cb; 
+            margin-left: auto;
+            text-transform: none;
+            letter-spacing: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .tier-1-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+        .tier-1-col {
+            border-right: 1.5px solid #453f3c;
+            padding: 8px 12px; 
+            display: flex;
+            flex-direction: column;
+        }
+        .tier-1-col:last-child { border-right: none; }
+        
+        .tier-2-box {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr; 
+            gap: 15px;
+            margin-bottom: 14px;
+        }
+        
+        .column-box {
+            border: 1.5px solid #453f3c;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: #fbf6ec;
+        }
+
+        .column-header {
+            background-color: #e3ddd7; 
+            border-bottom: 1.5px solid #453f3c;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .column-content {
+            padding: 8px 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .line-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #d4cdc5; 
+            height: 30px; 
+            outline: none;
+            font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #38332f;
+            padding: 0 2px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .line-input:focus {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-bottom: 1px solid #a39b94; 
+        }
+
+        .equipment-box {
+            border: 1.5px solid #453f3c;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #fbf6ec;
+            display: flex;
+            flex-direction: column;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="sheet">
+        <div class="header-grid serif-font">
+            <div class="header-cell">
+                <div class="header-label">Имя персонажа</div>
+                <input type="text" id="char_name" class="header-input auto-resize" data-max-size="22">
+            </div>
+            <div class="header-cell">
+                <div class="header-label">ХП</div>
+                <div class="split-input-wrapper">
+                    <input type="text" id="hp_current" class="header-input auto-resize" data-max-size="22">
+                    <span class="split-slash">/</span>
+                    <input type="text" id="hp_max" class="header-input auto-resize" data-max-size="22">
+                </div>
+            </div>
+            <div class="header-cell">
+                <div class="header-label">Броня</div>
+                <input type="text" id="armor" class="header-input auto-resize" data-max-size="22">
+            </div>
+            <div class="header-cell">
+                <div class="header-label">Очки воли</div>
+                <div class="split-input-wrapper">
+                    <input type="text" id="willpower_current" class="header-input auto-resize" data-max-size="22">
+                    <span class="split-slash">/</span>
+                    <input type="text" id="willpower_max" class="header-input auto-resize" data-max-size="22">
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid serif-font">
+            <div class="stat-box bg-flesh">
+                <span>ПЛОТЬ</span>
+                <div class="stat-value">
+                    <input type="text" id="stat_flesh" class="stat-input auto-resize" data-max-size="22" maxlength="4">
+                </div>
+            </div>
+            <div class="stat-box bg-will">
+                <span>ВОЛЯ</span>
+                <div class="stat-value">
+                    <input type="text" id="stat_will" class="stat-input auto-resize" data-max-size="22" maxlength="4">
+                </div>
+            </div>
+            <div class="stat-box bg-method">
+                <span>МЕТОД</span>
+                <div class="stat-value">
+                    <input type="text" id="stat_method" class="stat-input auto-resize" data-max-size="22" maxlength="4">
+                </div>
+            </div>
+        </div>
+
+        <div class="section-wrapper">
+            <div class="section-header serif-font">
+                Первая ступень 
+                <span class="skill-desc">Успех на 5+ для (1), 4+ для (2), 3+ для (3)</span>
+            </div>
+            <div class="tier-1-grid">
+                <div class="tier-1-col bg-flesh">
+                    <input type="text" id="t1_flesh_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_flesh_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_flesh_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_flesh_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_flesh_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_flesh_6" class="line-input auto-resize" data-max-size="16">
+                </div>
+                <div class="tier-1-col bg-will">
+                    <input type="text" id="t1_will_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_will_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_will_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_will_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_will_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_will_6" class="line-input auto-resize" data-max-size="16">
+                </div>
+                <div class="tier-1-col bg-method">
+                    <input type="text" id="t1_method_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_method_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_method_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_method_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_method_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t1_method_6" class="line-input auto-resize" data-max-size="16">
+                </div>
+            </div>
+        </div>
+
+        <div class="section-wrapper">
+            <div class="section-header serif-font">
+                Вторая ступень 
+                <span class="skill-desc">Добавляют (X)к6 к проверкам. Открывают особые способности</span>
+            </div>
+            <div class="tier-2-box">
+                <input type="text" id="t2_1" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_2" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_3" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_4" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_5" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_6" class="line-input auto-resize" data-max-size="16">
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="column-box">
+                <div class="column-header serif-font">ТРЕТЬЯ СТУПЕНЬ</div>
+                <div class="column-content">
+                    <input type="text" id="t3_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t3_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t3_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t3_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t3_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="t3_6" class="line-input auto-resize" data-max-size="16">
+                </div>
+            </div>
+            <div class="column-box">
+                <div class="column-header serif-font">ДОГМЫ И НАВЫКИ ДОГМ</div>
+                <div class="column-content">
+                    <input type="text" id="dogma_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="dogma_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="dogma_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="dogma_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="dogma_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="dogma_6" class="line-input auto-resize" data-max-size="16">
+                </div>
+            </div>
+        </div>
+        
+        <div class="equipment-box">
+            <div class="column-header serif-font">СНАРЯЖЕНИЕ И ПРЕДМЕТЫ</div>
+            <div class="column-content" style="padding-top: 5px;">
+                <input type="text" id="equip_1" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="equip_2" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="equip_3" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="equip_4" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="equip_5" class="line-input auto-resize" data-max-size="16">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resizeText(input) {
+            let ruler = document.getElementById('text-ruler');
+            if (!ruler) {
+                ruler = document.createElement('span');
+                ruler.id = 'text-ruler';
+                ruler.style.position = 'absolute';
+                ruler.style.visibility = 'hidden';
+                ruler.style.whiteSpace = 'pre';
+                document.body.appendChild(ruler);
+            }
+
+            const style = window.getComputedStyle(input);
+            ruler.style.fontFamily = style.fontFamily;
+            ruler.style.fontWeight = style.fontWeight;
+            ruler.style.letterSpacing = style.letterSpacing;
+            ruler.style.textTransform = style.textTransform;
+
+            ruler.textContent = input.value || "A";
+
+            const maxFontSize = parseInt(input.getAttribute('data-max-size')) || 16;
+            const minFontSize = 8; 
+            let currentFontSize = maxFontSize;
+
+            ruler.style.fontSize = currentFontSize + 'px';
+            const targetWidth = input.clientWidth - 6;
+
+            while (ruler.offsetWidth > targetWidth && currentFontSize > minFontSize) {
+                currentFontSize--;
+                ruler.style.fontSize = currentFontSize + 'px';
+            }
+
+            input.style.fontSize = currentFontSize + 'px';
+        }
+
+        document.querySelectorAll('.auto-resize').forEach(input => {
+            input.addEventListener('input', function() {
+                resizeText(this);
+            });
+            window.addEventListener('resize', function() {
+                resizeText(input);
+            });
+            setTimeout(() => resizeText(input), 50);
+        });
+    </script>
+	<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+    // ПРОВЕРЬ ЕЩЕ РАЗ: URL должен быть без /rest/v1/ на конце
+    const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    async function testLoad() {
+        console.log("Начинаю загрузку...");
+        
+        // Берем ID из ссылки ?id=1 или ставим 1
+        const urlParams = new URLSearchParams(window.location.search);
+        const charId = urlParams.get('id') || 1;
+
+        const { data, error } = await supabase
+            .from('characters')
+            .select('*')
+            .eq('id', charId)
+            .single();
+
+        if (error) {
+            console.error("Ошибка запроса:", error.message);
+            return;
+        }
+
+        console.log("Данные из базы получены:", data);
+
+        // Простейшая проверка: вставим имя прямо в заголовок страницы
+        if (data && data.char_name) {
+            const nameInput = document.getElementById('char_name');
+            if (nameInput) {
+                nameInput.value = data.char_name;
+                console.log("Имя вставлено в поле!");
+            } else {
+                console.error("Элемент с id='char_name' не найден в HTML!");
+            }
+        }
+    }
+
+    testLoad();
+</script>
+</body>
+</html>
