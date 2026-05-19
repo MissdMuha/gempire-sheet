@@ -50,7 +50,7 @@
             flex-grow: 1;
             overflow-y: auto;
             background-color: #fbf6ec;
-            padding: 15px 15px 90px 15px; /* Увеличен нижний отступ для меню */
+            padding: 15px 15px 90px 15px;
         }
         .tab-content.active { display: block; }
 
@@ -154,7 +154,7 @@
 
         .attribute-block {
             border-radius: 8px;
-            padding: 10px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
         }
@@ -163,7 +163,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             border-bottom: 1.5px solid rgba(69, 63, 60, 0.2);
             padding-bottom: 8px;
         }
@@ -199,8 +199,8 @@
             color: #2c2825;
         }
 
-        /* Поля для навыков (однострочные, высокие) */
-        .mobile-line-input {
+        /* Поля ввода в виде строчек (Умный текстовые блоки вместо Input) */
+        .mobile-line-textarea {
             width: 100%;
             background: transparent;
             border: none;
@@ -210,17 +210,21 @@
             font-weight: 600;
             color: #38332f;
             outline: none;
-            padding: 0 5px;
-            height: 36px;
-            line-height: 36px;
+            padding: 6px 4px;
+            min-height: 34px;
+            height: 34px;
+            line-height: 1.3;
+            resize: none;
+            overflow: hidden;
+            display: block;
             transition: background-color 0.2s;
         }
-        .mobile-line-input:focus {
+        .mobile-line-textarea:focus {
             background-color: rgba(255,255,255,0.4);
             border-bottom: 1px solid #a39b94;
         }
 
-        /* Заголовки разделов (2 Вкладка) */
+        /* Заголовки разделов */
         .section-title { 
             font-size: 13px; 
             font-weight: bold; 
@@ -233,7 +237,11 @@
             letter-spacing: 1px;
             color: #2c2825;
         }
-        .section-title:first-child { margin-top: 0; }
+        
+        .skills-tablet-layout {
+            display: flex;
+            flex-direction: column;
+        }
 
         /* Карточки */
         .cards-container { 
@@ -247,7 +255,7 @@
             background-color: #fbf6ec; 
             width: 100%;
             max-width: 300px;
-            height: 420px; /* Приблизительное соотношение 63.5/88.9 */
+            height: 420px; 
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
             display: flex;
@@ -302,10 +310,6 @@
             flex-direction: column;
         }
 
-        .flesh-theme { background-color: #f7e6ea !important; }
-        .will-theme  { background-color: #efe3fa !important; }
-        .method-theme { background-color: #e3f0fa !important; }
-
         .card-rich-text {
             width: 100%;
             height: 100%;
@@ -344,6 +348,50 @@
 
         .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
         .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+
+        /* ========================================================
+           АДАПТИВНАЯ ВЕРСТКА ДЛЯ ПЛАНШЕТОВ И ГОРИЗОНТАЛЬНОГО РЕЖИМА
+           ======================================================== */
+        @media (min-width: 768px) {
+            /* Шапка ХП / Воля / Броня в одну линию из 3 колонок */
+            .status-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .status-card.full-width {
+                grid-column: span 1;
+                flex-direction: column;
+                justify-content: center;
+                gap: 0;
+            }
+            
+            /* Характеристики перестраиваются в 3 параллельные колонки */
+            .attributes-stack {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                align-items: start;
+            }
+
+            /* Вторая вкладка делится на 2 полноценные колонки */
+            .skills-tablet-layout {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+            .skills-column .section-title:first-child {
+                margin-top: 0;
+            }
+
+            /* Карточки выстраиваются аккуратной плиткой (рядами) */
+            .cards-container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
@@ -368,7 +416,7 @@
                 </div>
             </div>
             <div class="status-card full-width">
-                <span class="status-label" style="margin-bottom: 0;">Броня</span>
+                <span class="status-label">Броня</span>
                 <input type="text" id="armor" class="single-status-input" inputmode="numeric">
             </div>
         </div>
@@ -381,12 +429,12 @@
                         <input type="text" id="stat_flesh" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <input type="text" id="t1_flesh_1" class="mobile-line-input" placeholder="Навык плоти...">
-                <input type="text" id="t1_flesh_2" class="mobile-line-input">
-                <input type="text" id="t1_flesh_3" class="mobile-line-input">
-                <input type="text" id="t1_flesh_4" class="mobile-line-input">
-                <input type="text" id="t1_flesh_5" class="mobile-line-input">
-                <input type="text" id="t1_flesh_6" class="mobile-line-input">
+                <textarea id="t1_flesh_1" class="mobile-line-textarea" placeholder="Навык плоти..." rows="1"></textarea>
+                <textarea id="t1_flesh_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_flesh_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_flesh_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_flesh_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_flesh_6" class="mobile-line-textarea" rows="1"></textarea>
             </div>
 
             <div class="attribute-block bg-will">
@@ -396,12 +444,12 @@
                         <input type="text" id="stat_will" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <input type="text" id="t1_will_1" class="mobile-line-input" placeholder="Навык воли...">
-                <input type="text" id="t1_will_2" class="mobile-line-input">
-                <input type="text" id="t1_will_3" class="mobile-line-input">
-                <input type="text" id="t1_will_4" class="mobile-line-input">
-                <input type="text" id="t1_will_5" class="mobile-line-input">
-                <input type="text" id="t1_will_6" class="mobile-line-input">
+                <textarea id="t1_will_1" class="mobile-line-textarea" placeholder="Навык воли..." rows="1"></textarea>
+                <textarea id="t1_will_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_will_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_will_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_will_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_will_6" class="mobile-line-textarea" rows="1"></textarea>
             </div>
 
             <div class="attribute-block bg-method">
@@ -411,47 +459,55 @@
                         <input type="text" id="stat_method" maxlength="4" inputmode="numeric">
                     </div>
                 </div>
-                <input type="text" id="t1_method_1" class="mobile-line-input" placeholder="Навык метода...">
-                <input type="text" id="t1_method_2" class="mobile-line-input">
-                <input type="text" id="t1_method_3" class="mobile-line-input">
-                <input type="text" id="t1_method_4" class="mobile-line-input">
-                <input type="text" id="t1_method_5" class="mobile-line-input">
-                <input type="text" id="t1_method_6" class="mobile-line-input">
+                <textarea id="t1_method_1" class="mobile-line-textarea" placeholder="Навык метода..." rows="1"></textarea>
+                <textarea id="t1_method_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_method_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_method_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_method_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t1_method_6" class="mobile-line-textarea" rows="1"></textarea>
             </div>
         </div>
     </div>
 
     <div id="tab-skills" class="tab-content">
-        <div class="section-title serif-font">Вторая Ступень</div>
-        <input type="text" id="t2_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t2_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t2_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t2_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t2_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t2_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        
-        <div class="section-title serif-font">Третья Ступень</div>
-        <input type="text" id="t3_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t3_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t3_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t3_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t3_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="t3_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        
-        <div class="section-title serif-font">Догмы и Навыки Догм</div>
-        <input type="text" id="dogma_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="dogma_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="dogma_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="dogma_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="dogma_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="dogma_6" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        
-        <div class="section-title serif-font">Снаряжение и Предметы</div>
-        <input type="text" id="equip_1" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="equip_2" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="equip_3" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="equip_4" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
-        <input type="text" id="equip_5" class="mobile-line-input" style="border-bottom-color: #d4cdc5;">
+        <div class="skills-tablet-layout">
+            
+            <div class="skills-column">
+                <div class="section-title serif-font">Вторая Ступень</div>
+                <textarea id="t2_1" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_6" class="mobile-line-textarea" rows="1"></textarea>
+                
+                <div class="section-title serif-font">Третья Ступень</div>
+                <textarea id="t3_1" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t3_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t3_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t3_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t3_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t3_6" class="mobile-line-textarea" rows="1"></textarea>
+            </div>
+
+            <div class="skills-column">
+                <div class="section-title serif-font">Догмы и Навыки Догм</div>
+                <textarea id="dogma_1" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="dogma_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="dogma_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="dogma_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="dogma_5" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="dogma_6" class="mobile-line-textarea" rows="1"></textarea>
+                
+                <div class="section-title serif-font">Снаряжение и Предметы</div>
+                <textarea id="equip_1" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="equip_2" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="equip_3" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="equip_4" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="equip_5" class="mobile-line-textarea" rows="1"></textarea>
+            </div>
+
+        </div>
     </div>
 
     <div id="tab-cards" class="tab-content">
@@ -471,8 +527,27 @@
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('tab-' + tabName).classList.add('active');
             btn.classList.add('active');
-            window.scrollTo(0, 0); // Сброс скролла при переключении
+            window.scrollTo(0, 0);
+            
+            // Если переключились на навыки или главное, принудительно пересчитываем высоту строк
+            document.querySelectorAll('.mobile-line-textarea').forEach(el => {
+                autoExpandTextarea(el);
+            });
         }
+
+        // Функция автоматического изменения высоты строки под контент
+        function autoExpandTextarea(el) {
+            el.style.height = 'auto';
+            // Вычисляем scrollHeight, чтобы задать точный размер блока
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        // Слушаем ввод текста для динамического расширения
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('mobile-line-textarea')) {
+                autoExpandTextarea(e.target);
+            }
+        });
     </script>
 
     <script type="module">
@@ -487,8 +562,8 @@
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
 
-        // Подгонка текста под линовку карточек
-        function resizeTextArea(area) {
+        // Подгонка текста под линовку внутри карточек способностей
+        function resizeCardText(area) {
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
 
@@ -504,6 +579,7 @@
             }
         }
 
+        // ЗАГРУЗКА ДАННЫХ ПЕРСОНАЖА
         async function loadCharacter() {
             if (!charId) return;
             const { data } = await supabase.from('characters').select('*').eq('id', charId);
@@ -512,13 +588,18 @@
                     const input = document.getElementById(key);
                     if (input) {
                         input.value = data[0][key] || '';
+                        // После загрузки текста адаптируем высоту textarea
+                        if (input.classList.contains('mobile-line-textarea')) {
+                            autoExpandTextarea(input);
+                        }
                     }
                 }
             }
         }
 
+        // СОХРАНЕНИЕ ДАННЫХ ПРИ ИЗМЕНЕНИИ ПОЛЕЙ
         document.addEventListener('change', async (e) => {
-            if (e.target.tagName === 'INPUT') {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 const fieldId = e.target.id;
                 if (fieldId && charId) {
                     await supabase.from('characters').update({ [fieldId]: e.target.value }).eq('id', charId);
@@ -526,6 +607,7 @@
             }
         });
 
+        // REALTIME ОБНОВЛЕНИЯ (От Мастера)
         supabase.channel('any').on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
@@ -533,11 +615,15 @@
                     const input = document.getElementById(key);
                     if (input && document.activeElement !== input) {
                         input.value = payload.new[key] || '';
+                        if (input.classList.contains('mobile-line-textarea')) {
+                            autoExpandTextarea(input);
+                        }
                     }
                 }
             }
         ).subscribe();
 
+        // ЗАГРУЗКА КАРТОЧЕК ИНВЕНТАРЯ
         async function loadCards() {
             if (!charId) return;
             const { data: cards } = await supabase.from('cards').select('*').eq('owner_id', charId);
@@ -574,7 +660,7 @@
 
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => {
-                    resizeTextArea(el);
+                    resizeCardText(el);
                 });
             }, 100);
         }
