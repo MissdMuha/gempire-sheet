@@ -281,7 +281,6 @@
             flex-direction: column;
         }
 
-
         /* --- СТИЛИ ДЛЯ КАРТОЧЕК --- */
         .cards-view-section {
             margin-top: 40px;
@@ -376,7 +375,6 @@
             flex-direction: column;
         }
 
-        /* Тот самый магический блок с привязкой текста к линовке */
         .card-rich-text {
             width: 100%;
             height: 100%;
@@ -436,6 +434,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            width: 100%;
         }
 
         /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ КАРТОЧЕК --- */
@@ -667,6 +666,7 @@
 
         // Авто-ресайз текста на карточках
         function resizeTextArea(area) {
+            if (!area) return;
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
 
@@ -680,6 +680,18 @@
             while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
+            }
+        }
+
+        // Авто-ресайз тэгов в подвале карточки
+        function resizeTagsText(el) {
+            if (!el) return;
+            let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
+            el.style.fontSize = currentFS + 'px';
+            
+            while (el.scrollWidth > el.clientWidth && currentFS > 6) {
+                currentFS -= 0.5;
+                el.style.fontSize = currentFS + 'px';
             }
         }
 
@@ -742,7 +754,7 @@
                     </div>
                     <div class="card-footer ${safeTheme}">
                         <div class="footer-label">ТЭГИ</div>
-                        <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                        <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                     </div>
                 </div>
             </div>
@@ -751,6 +763,9 @@
         setTimeout(() => {
             const area = container.querySelector('.auto-resize-area');
             if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
+            
+            const tags = container.querySelector('.auto-resize-tags');
+            if (tags && typeof resizeTagsText === 'function') resizeTagsText(tags);
         }, 50);
     };
 
@@ -842,7 +857,7 @@
                         </div>
                         <div class="card-footer ${safeTheme}">
                             <div class="footer-label">ТЭГИ</div>
-                            <div class="card-footer-tags-display">${card.card_footer_tags || ''}</div>
+                            <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                         </div>
                     </div>
                 </div>
@@ -850,10 +865,15 @@
             container.insertAdjacentHTML('beforeend', html);
         });
 
-        // Запускаем подгонку текста к линовке
-        container.querySelectorAll('.auto-resize-area').forEach(el => {
-            resizeTextArea(el);
-        });
+        // Запускаем подгонку текста к линовке и ресайз тэгов
+        setTimeout(() => {
+            container.querySelectorAll('.auto-resize-area').forEach(el => {
+                resizeTextArea(el);
+            });
+            container.querySelectorAll('.auto-resize-tags').forEach(el => {
+                resizeTagsText(el);
+            });
+        }, 100);
     }
 
     loadCharacter();
