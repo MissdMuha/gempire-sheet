@@ -38,7 +38,7 @@
             font-family: 'Georgia', 'Times New Roman', serif;
         }
 
-        /* Кнопка переключения версий */
+       /* Компактная кнопка переключения версий */
         .switch-version-btn {
             position: fixed;
             top: 20px;
@@ -46,15 +46,16 @@
             background-color: #453f3c;
             color: #fbf6ec;
             border: 1px solid rgba(251, 246, 236, 0.2);
-            padding: 8px 15px;
+            padding: 8px 10px; /* Уменьшили боковые отступы, чтобы кнопка стала уже */
             border-radius: 6px;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-size: 13px;
-            font-weight: bold;
+            font-size: 18px; /* Немного увеличили само эмодзи для удобства */
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             z-index: 1000;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .switch-version-btn:hover {
             background-color: #635a55;
