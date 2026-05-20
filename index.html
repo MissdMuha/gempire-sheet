@@ -281,6 +281,7 @@
             flex-direction: column;
         }
 
+
         /* --- СТИЛИ ДЛЯ КАРТОЧЕК --- */
         .cards-view-section {
             margin-top: 40px;
@@ -297,10 +298,40 @@
             justify-content: flex-start;
         }
 
+        /* --- КНОПКА И СТИЛИ КОМПАКТНОГО РЕЖИМА --- */
+        .compact-toggle-btn {
+            background: #453f3c; border: 1px solid rgba(251, 246, 236, 0.3); color: #fbf6ec;
+            border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: bold;
+            font-family: 'Segoe UI', Tahoma, sans-serif; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .compact-toggle-btn:hover { background: #635a55; }
+        .compact-toggle-btn.active { background: #a5c6df; color: #2b2b2b; border-color: #a5c6df; }
+
+        .cards-container.compact-mode {
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+        .cards-container.compact-mode .card {
+            height: 68px; /* Высота шапки */
+            min-height: 68px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-bottom: 0;
+        }
+        .cards-container.compact-mode .card.expanded {
+            height: 88.9mm;
+            min-height: 88.9mm;
+            cursor: default;
+        }
+
         .card {
             background-color: #fbf6ec; 
             width: 63.5mm;
             height: 88.9mm;
+            min-height: 88.9mm;
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
             display: flex;
@@ -375,6 +406,7 @@
             flex-direction: column;
         }
 
+        /* Тот самый магический блок с привязкой текста к линовке */
         .card-rich-text {
             width: 100%;
             height: 100%;
@@ -613,9 +645,14 @@
     </div>
 
     <div class="cards-view-section">
-        <h2 style="color: #fbf6ec; font-family: 'Georgia', serif; border-bottom: 1px solid #635a55; padding-bottom: 10px; text-align: center; margin: 0;">
-            Инвентарь Карточек
-        </h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #635a55; padding-bottom: 10px; margin-bottom: 10px;">
+            <h2 style="color: #fbf6ec; font-family: 'Georgia', serif; margin: 0;">
+                Инвентарь Способностей
+            </h2>
+            <button id="compact-toggle-btn" class="compact-toggle-btn" title="Компактный вид" onclick="window.toggleCompactMode()">
+                🗂️ Списки
+            </button>
+        </div>
         <div id="cards-container" class="cards-container">
             </div>
     </div>
@@ -629,6 +666,18 @@
     </div>
 
     <script>
+        // Скрипт переключения компактного режима
+        window.toggleCompactMode = function() {
+            const btn = document.getElementById('compact-toggle-btn');
+            const container = document.getElementById('cards-container');
+            
+            container.classList.toggle('compact-mode');
+            btn.classList.toggle('active');
+            
+            // Сворачиваем карточки при смене режима
+            container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
+        };
+
         // Ресайз для полей листа персонажа
         function resizeText(input) {
             let ruler = document.getElementById('text-ruler');
@@ -662,6 +711,11 @@
             }
 
             input.style.fontSize = currentFontSize + 'px';
+
+            // Обновляем слой предпросмотра для ссылок, если размер шрифта изменился
+            if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
+                window.updateInputDisplay(input.id);
+            }
         }
 
         // Авто-ресайз текста на карточках
@@ -773,6 +827,76 @@
         document.getElementById('card-modal-overlay').classList.remove('active');
     };
 
+    // --- МАГИЯ ДЛЯ ВСЕХ ПОЛЕЙ (Навыки, Догмы, Снаряжение) ---
+    window.setupInputLinks = function() {
+        // Выбираем абсолютно все поля-строчки
+        const inputs = document.querySelectorAll('.line-input');
+        
+        inputs.forEach(input => {
+            const id = input.id;
+            if (!id) return;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.width = '100%';
+            
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+
+            const display = document.createElement('div');
+            display.id = id + '_display';
+            display.className = input.className; // Копируем родной стиль
+            display.style.cursor = 'text';
+            display.style.display = 'flex';
+            display.style.alignItems = 'center';
+            display.style.whiteSpace = 'nowrap';
+            display.style.overflow = 'hidden';
+            
+            // Накладываем идеально поверх инпута
+            display.style.position = 'absolute';
+            display.style.top = '0';
+            display.style.left = '0';
+            display.style.width = '100%';
+            display.style.height = '100%';
+            display.style.pointerEvents = 'auto'; // Перехватываем клики
+            
+            wrapper.insertBefore(display, input);
+
+            // Прячем сам инпут, но оставляем на месте, чтобы он диктовал размер
+            input.style.position = 'relative';
+            input.style.opacity = '0';
+            input.style.pointerEvents = 'none';
+
+            display.addEventListener('click', (e) => {
+                if (e.target.classList.contains('card-link')) return; // Не мешаем ссылкам
+                display.style.display = 'none';
+                input.style.opacity = '1';
+                input.style.pointerEvents = 'auto';
+                input.focus();
+            });
+
+            input.addEventListener('blur', () => {
+                input.style.opacity = '0';
+                input.style.pointerEvents = 'none';
+                display.style.display = 'flex';
+                window.updateInputDisplay(id);
+            });
+            
+            input.addEventListener('input', () => window.updateInputDisplay(id));
+        });
+    };
+
+    window.updateInputDisplay = function(inputId) {
+        const input = document.getElementById(inputId);
+        const display = document.getElementById(inputId + '_display');
+        if (input && display) {
+            let text = input.value || '';
+            display.innerHTML = window.parseCardLinks(text) || '&nbsp;';
+            // Синхронизируем размер шрифта, если он поменялся из-за авто-ресайза
+            display.style.fontSize = input.style.fontSize || '16px'; 
+        }
+    };
+
     // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа)
     async function loadCharacter() {
         if (!charId) return;
@@ -785,6 +909,10 @@
                 if (input) {
                     input.value = character[key] || '';
                     if (typeof resizeText === 'function') resizeText(input);
+                    // Обновляем дисплей слоя, если это поле со ссылками
+                    if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
+                        window.updateInputDisplay(key);
+                    }
                 }
             }
         }
@@ -813,13 +941,16 @@
                     if (input) {
                         input.value = payload.new[key] || '';
                         if (typeof resizeText === 'function') resizeText(input);
+                        if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
+                            window.updateInputDisplay(key);
+                        }
                     }
                 }
             }
         )
         .subscribe();
 
-    // 4. ЗАГРУЗКА КАРТОЧЕК С НОВЫМ ДИЗАЙНОМ, АВТО-РЕСАЙЗОМ И ССЫЛКАМИ
+    // 4. ЗАГРУЗКА КАРТОЧЕК
     async function loadCards() {
         if (!charId) return;
         
@@ -865,7 +996,29 @@
             container.insertAdjacentHTML('beforeend', html);
         });
 
-        // Запускаем подгонку текста к линовке и ресайз тэгов
+        // Логика аккордеона для Компактного режима
+        container.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.classList.contains('card-link')) return; 
+
+                if (container.classList.contains('compact-mode')) {
+                    if (this.classList.contains('expanded')) {
+                        this.classList.remove('expanded'); 
+                    } else {
+                        container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
+                        this.classList.add('expanded');
+                        
+                        // Пересчет текста при раскрытии карточки
+                        const area = this.querySelector('.auto-resize-area');
+                        if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
+                        const tags = this.querySelector('.auto-resize-tags');
+                        if (tags && typeof resizeTagsText === 'function') resizeTagsText(tags);
+                    }
+                }
+            });
+        });
+
+        // Запускаем подгонку текста
         setTimeout(() => {
             container.querySelectorAll('.auto-resize-area').forEach(el => {
                 resizeTextArea(el);
@@ -876,6 +1029,8 @@
         }, 100);
     }
 
+    // Инициализация
+    window.setupInputLinks(); // Запускаем создание слоев-дублеров
     loadCharacter();
     loadCards();
     </script>
