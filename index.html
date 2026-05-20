@@ -309,9 +309,9 @@
         .compact-toggle-btn.active { background: #a5c6df; color: #2b2b2b; border-color: #a5c6df; }
 
         .cards-container.compact-mode {
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
+            /* flex-direction: column; -- Убрано, чтобы разрешить карточкам вставать в несколько колонок */
+            gap: 15px; 
+            align-items: flex-start; /* Карточки выравниваются по верхнему краю ряда, не растягиваясь */
         }
         .cards-container.compact-mode .card {
             height: 68px; /* Высота шапки */
@@ -646,9 +646,7 @@
 
     <div class="cards-view-section">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #635a55; padding-bottom: 10px; margin-bottom: 10px;">
-            <h2 style="color: #fbf6ec; font-family: 'Georgia', serif; margin: 0;">
-                Инвентарь Способностей
-            </h2>
+            <h2 style="color: #fbf6ec; font-family: 'Georgia', serif; margin: 0;">Инвентарь Способностей</h2>
             <button id="compact-toggle-btn" class="compact-toggle-btn" title="Компактный вид" onclick="window.toggleCompactMode()">
                 🗂️ Списки
             </button>
@@ -674,7 +672,7 @@
             container.classList.toggle('compact-mode');
             btn.classList.toggle('active');
             
-            // Сворачиваем карточки при смене режима
+            // При смене режима сворачиваем все карточки
             container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
         };
 
@@ -829,7 +827,6 @@
 
     // --- МАГИЯ ДЛЯ ВСЕХ ПОЛЕЙ (Навыки, Догмы, Снаряжение) ---
     window.setupInputLinks = function() {
-        // Выбираем абсолютно все поля-строчки
         const inputs = document.querySelectorAll('.line-input');
         
         inputs.forEach(input => {
@@ -845,30 +842,28 @@
 
             const display = document.createElement('div');
             display.id = id + '_display';
-            display.className = input.className; // Копируем родной стиль
+            display.className = input.className; 
             display.style.cursor = 'text';
-            display.style.display = 'flex';
-            display.style.alignItems = 'center';
-            display.style.whiteSpace = 'nowrap';
+            display.style.display = 'block'; // Block вместо flex, чтобы не съедались пробелы перед span
+            display.style.lineHeight = '30px'; // Выравнивание текста по высоте поля
+            display.style.whiteSpace = 'pre'; // Запрет переноса и жесткое сохранение пробелов
             display.style.overflow = 'hidden';
             
-            // Накладываем идеально поверх инпута
             display.style.position = 'absolute';
             display.style.top = '0';
             display.style.left = '0';
             display.style.width = '100%';
             display.style.height = '100%';
-            display.style.pointerEvents = 'auto'; // Перехватываем клики
+            display.style.pointerEvents = 'auto'; 
             
             wrapper.insertBefore(display, input);
 
-            // Прячем сам инпут, но оставляем на месте, чтобы он диктовал размер
             input.style.position = 'relative';
             input.style.opacity = '0';
             input.style.pointerEvents = 'none';
 
             display.addEventListener('click', (e) => {
-                if (e.target.classList.contains('card-link')) return; // Не мешаем ссылкам
+                if (e.target.classList.contains('card-link')) return; 
                 display.style.display = 'none';
                 input.style.opacity = '1';
                 input.style.pointerEvents = 'auto';
@@ -878,7 +873,7 @@
             input.addEventListener('blur', () => {
                 input.style.opacity = '0';
                 input.style.pointerEvents = 'none';
-                display.style.display = 'flex';
+                display.style.display = 'block'; // Снова показываем как блок
                 window.updateInputDisplay(id);
             });
             
@@ -892,7 +887,6 @@
         if (input && display) {
             let text = input.value || '';
             display.innerHTML = window.parseCardLinks(text) || '&nbsp;';
-            // Синхронизируем размер шрифта, если он поменялся из-за авто-ресайза
             display.style.fontSize = input.style.fontSize || '16px'; 
         }
     };
