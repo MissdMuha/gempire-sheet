@@ -277,7 +277,36 @@
             align-items: center; 
             gap: 25px; 
         }
-        
+        /* --- КНОПКА И СТИЛИ КОМПАКТНОГО РЕЖИМА --- */
+        .compact-toggle-btn {
+            background: transparent; border: 1.5px solid #453f3c; color: #453f3c;
+            border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; font-weight: bold;
+            font-family: 'Segoe UI', sans-serif; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase;
+        }
+        .compact-toggle-btn.active { background: #453f3c; color: #fbf6ec; }
+
+        .cards-container.compact-mode { 
+            flex-direction: row; 
+            flex-wrap: wrap; 
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .cards-container.compact-mode .card {
+            height: 70px; 
+            min-height: 70px;
+            cursor: pointer; overflow: hidden;
+            transition: height 0.35s ease;
+            width: calc(50% - 8px); /* Строго 2 колонки на телефоне */
+            min-width: 130px;
+        }
+        .cards-container.compact-mode .card.expanded {
+            height: 420px; 
+            min-height: 420px; cursor: default;
+            width: 100%; /* Раскрытая карточка занимает весь ряд */
+            max-width: 300px;
+        }
         .card {
             background-color: #fbf6ec; 
             width: 100%;
@@ -546,9 +575,12 @@
         </div>
     </div>
 
-    <div id="tab-cards" class="tab-content">
-        <div id="cards-container" class="cards-container">
-            </div>
+   <div id="tab-cards" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #453f3c; padding-bottom: 10px; width: 100%; max-width: 300px; margin: 0 auto 20px auto;">
+            <h2 style="color: #453f3c; font-family: 'Georgia', serif; margin: 0; font-size: 16px; text-transform: uppercase;">Карточки</h2>
+            <button id="compact-toggle-btn" class="compact-toggle-btn" onclick="window.toggleCompactMode()">🗂️ Списки</button>
+        </div>
+        <div id="cards-container" class="cards-container"></div>
     </div>
 
     <div class="bottom-nav">
@@ -575,6 +607,14 @@
             
             document.querySelectorAll('.mobile-line-textarea').forEach(el => {
                 autoExpandTextarea(el);
+       window.toggleCompactMode = function() {
+            const btn = document.getElementById('compact-toggle-btn');
+            const container = document.getElementById('cards-container');
+            container.classList.toggle('compact-mode');
+            btn.classList.toggle('active');
+            // Сворачиваем карточки при смене режима
+            container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
+        };         
             });
         }
 
@@ -601,7 +641,68 @@
         const charId = urlParams.get('id');
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
+// --- МАГИЯ ДЛЯ ВСЕХ ПОЛЕЙ (Ступени, Догмы, Снаряжение) ---
+        window.setupInputLinks = function() {
+            const inputs = document.querySelectorAll('.mobile-line-textarea');
+            
+            inputs.forEach(input => {
+                const id = input.id;
+                if (!id) return;
 
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+
+                const display = document.createElement('div');
+                display.id = id + '_display';
+                display.className = input.className;
+                display.style.cursor = 'text';
+                display.style.display = 'block'; 
+                display.style.whiteSpace = 'pre-wrap'; 
+                display.style.wordWrap = 'break-word';
+                display.style.overflow = 'hidden';
+
+                wrapper.insertBefore(display, input);
+
+                input.style.position = 'absolute';
+                input.style.top = '0';
+                input.style.left = '0';
+                input.style.opacity = '0';
+                input.style.pointerEvents = 'none';
+
+                display.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('card-link')) return; 
+                    display.style.display = 'none';
+                    input.style.position = 'relative';
+                    input.style.opacity = '1';
+                    input.style.pointerEvents = 'auto';
+                    input.focus();
+                });
+
+                input.addEventListener('blur', () => {
+                    input.style.position = 'absolute';
+                    input.style.opacity = '0';
+                    input.style.pointerEvents = 'none';
+                    display.style.display = 'block';
+                    window.updateInputDisplay(id);
+                });
+                
+                input.addEventListener('input', () => window.updateInputDisplay(id));
+            });
+        };
+
+        window.updateInputDisplay = function(inputId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(inputId + '_display');
+            if (input && display) {
+                let text = input.value || '';
+                display.innerHTML = window.parseCardLinks(text) || '&nbsp;';
+                display.style.fontSize = input.style.fontSize || '15px'; 
+            }
+        };
         // Обработка гиперссылок [[Название]]
         window.parseCardLinks = function(text) {
             if (!text) return '';
@@ -696,7 +797,10 @@
                 for (const key in data[0]) {
                     const input = document.getElementById(key);
                     if (input) {
-                        input.value = data[0][key] || '';
+                        input.value = if (input.classList.contains('mobile-line-textarea')) {
+    window.autoExpandTextarea(input);
+    if (typeof window.updateInputDisplay === 'function') window.updateInputDisplay(key);
+}data[0][key] || '';
                         if (input.classList.contains('mobile-line-textarea')) {
                             autoExpandTextarea(input);
                         }
@@ -762,7 +866,25 @@
                     </div>`;
                 container.insertAdjacentHTML('beforeend', html);
             });
+container.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('card-link')) return; 
 
+                    if (container.classList.contains('compact-mode')) {
+                        if (this.classList.contains('expanded')) {
+                            this.classList.remove('expanded');
+                        } else {
+                            container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
+                            this.classList.add('expanded');
+                            // Ресайзим текст раскрытой карточки
+                            const area = this.querySelector('.auto-resize-area');
+                            if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                            const tags = this.querySelector('.auto-resize-tags');
+                            if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                        }
+                    }
+                });
+            });
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => {
                     resizeCardText(el);
@@ -772,7 +894,7 @@
                 });
             }, 100);
         }
-
+window.setupInputLinks();
         loadCharacter();
         loadCards();
     </script>
