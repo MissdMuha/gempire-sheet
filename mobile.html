@@ -270,6 +270,16 @@
             flex-direction: column;
         }
 
+        /* --- КНОПКА И СТИЛИ КОМПАКТНОГО РЕЖИМА --- */
+        .compact-toggle-btn {
+            background: #453f3c; border: 1px solid rgba(251, 246, 236, 0.3); color: #fbf6ec;
+            border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: bold;
+            font-family: 'Segoe UI', Tahoma, sans-serif; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .compact-toggle-btn:hover { background: #635a55; }
+        .compact-toggle-btn.active { background: #a5c6df; color: #2b2b2b; border-color: #a5c6df; }
+
         /* Карточки */
         .cards-container { 
             display: flex; 
@@ -277,12 +287,32 @@
             align-items: center; 
             gap: 25px; 
         }
+
+        .cards-container.compact-mode {
+            gap: 15px; 
+        }
+
+        .cards-container.compact-mode .card {
+            height: 68px; /* 52px шапка + 16px (2*8) паддинги */
+            min-height: 68px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            margin-bottom: 0;
+        }
+
+        .cards-container.compact-mode .card.expanded {
+            height: 420px;
+            min-height: 420px;
+            cursor: default;
+        }
         
         .card {
             background-color: #fbf6ec; 
             width: 100%;
             max-width: 300px;
             height: 420px; 
+            min-height: 420px;
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
             display: flex;
@@ -424,6 +454,7 @@
             .skills-tablet-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
             .skills-column .section-title:first-child { margin-top: 0; }
             .cards-container { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: flex-start; }
+            .cards-container.compact-mode { align-items: flex-start; }
         }
     </style>
 </head>
@@ -547,6 +578,12 @@
     </div>
 
     <div id="tab-cards" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(69, 63, 60, 0.2); padding-bottom: 10px; margin-bottom: 20px;">
+            <h2 style="color: #453f3c; font-family: 'Georgia', serif; margin: 0; font-size: 18px;">Инвентарь Способностей</h2>
+            <button id="compact-toggle-btn" class="compact-toggle-btn" title="Компактный вид" onclick="window.toggleCompactMode()">
+                🗂️ Списки
+            </button>
+        </div>
         <div id="cards-container" class="cards-container">
             </div>
     </div>
@@ -566,6 +603,18 @@
     </div>
 
     <script>
+        // Скрипт переключения компактного режима
+        window.toggleCompactMode = function() {
+            const btn = document.getElementById('compact-toggle-btn');
+            const container = document.getElementById('cards-container');
+            
+            container.classList.toggle('compact-mode');
+            btn.classList.toggle('active');
+            
+            // Сворачиваем все карточки при переключении
+            container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
+        };
+
         function switchTab(tabName, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -607,6 +656,75 @@
             if (!text) return '';
             return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link" onclick="openCardModal(\'$1\')">$1</span>');
         }
+
+        // --- МАГИЯ ДЛЯ ВСЕХ ПОЛЕЙ (Навыки, Догмы, Снаряжение) НА МОБИЛЬНОМ ---
+        window.setupInputLinks = function() {
+            const inputs = document.querySelectorAll('.mobile-line-textarea');
+            
+            inputs.forEach(input => {
+                const id = input.id;
+                if (!id) return;
+
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'relative';
+                wrapper.style.width = '100%';
+                
+                input.parentNode.insertBefore(wrapper, input);
+                wrapper.appendChild(input);
+
+                const display = document.createElement('div');
+                display.id = id + '_display';
+                display.className = input.className; 
+                display.style.cursor = 'text';
+                display.style.display = 'block';
+                display.style.whiteSpace = 'pre-wrap';
+                display.style.wordWrap = 'break-word';
+                display.style.overflow = 'hidden';
+                
+                display.style.position = 'absolute';
+                display.style.top = '0';
+                display.style.left = '0';
+                display.style.width = '100%';
+                display.style.height = '100%';
+                display.style.pointerEvents = 'auto';
+                display.style.zIndex = '2';
+                display.style.borderColor = 'transparent'; // Скрываем дублирующийся бордер
+                display.style.background = 'transparent';
+                
+                wrapper.insertBefore(display, input);
+
+                input.style.position = 'relative';
+                input.style.opacity = '0';
+                input.style.zIndex = '1';
+                input.style.pointerEvents = 'none';
+
+                display.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('card-link')) return; 
+                    display.style.display = 'none';
+                    input.style.opacity = '1';
+                    input.style.pointerEvents = 'auto';
+                    input.focus();
+                });
+
+                input.addEventListener('blur', () => {
+                    input.style.opacity = '0';
+                    input.style.pointerEvents = 'none';
+                    display.style.display = 'block'; 
+                    window.updateInputDisplay(id);
+                });
+                
+                input.addEventListener('input', () => window.updateInputDisplay(id));
+            });
+        };
+
+        window.updateInputDisplay = function(inputId) {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(inputId + '_display');
+            if (input && display) {
+                let text = input.value || '';
+                display.innerHTML = window.parseCardLinks(text) || '&nbsp;';
+            }
+        };
 
         // Открытие модального окна с карточкой
         window.openCardModal = async function(title) {
@@ -699,6 +817,9 @@
                         input.value = data[0][key] || '';
                         if (input.classList.contains('mobile-line-textarea')) {
                             autoExpandTextarea(input);
+                            if (typeof window.updateInputDisplay === 'function') {
+                                window.updateInputDisplay(key);
+                            }
                         }
                     }
                 }
@@ -723,6 +844,9 @@
                         input.value = payload.new[key] || '';
                         if (input.classList.contains('mobile-line-textarea')) {
                             autoExpandTextarea(input);
+                            if (typeof window.updateInputDisplay === 'function') {
+                                window.updateInputDisplay(key);
+                            }
                         }
                     }
                 }
@@ -763,6 +887,28 @@
                 container.insertAdjacentHTML('beforeend', html);
             });
 
+            // Логика аккордеона для Компактного режима
+            container.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('card-link')) return; 
+
+                    if (container.classList.contains('compact-mode')) {
+                        if (this.classList.contains('expanded')) {
+                            this.classList.remove('expanded'); 
+                        } else {
+                            container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
+                            this.classList.add('expanded');
+                            
+                            // Пересчет текста при раскрытии карточки
+                            const area = this.querySelector('.auto-resize-area');
+                            if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                            const tags = this.querySelector('.auto-resize-tags');
+                            if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                        }
+                    }
+                });
+            });
+
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => {
                     resizeCardText(el);
@@ -773,6 +919,8 @@
             }, 100);
         }
 
+        // Инициализация
+        window.setupInputLinks();
         loadCharacter();
         loadCards();
     </script>
