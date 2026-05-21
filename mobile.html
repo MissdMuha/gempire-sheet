@@ -296,7 +296,7 @@
         .cards-container.compact-mode { gap: 15px; }
 
         .cards-container.compact-mode .card {
-            height: 68px; /* Шапка 52px + 2*8px padding */
+            height: 68px;
             min-height: 68px;
             cursor: pointer;
             overflow: hidden;
@@ -304,23 +304,24 @@
         }
         
         .cards-container.compact-mode .card.expanded {
-            height: 420px;
-            min-height: 420px;
+            height: 88.9mm;
+            min-height: 88.9mm;
             cursor: default;
         }
         
         .card {
             background-color: #fbf6ec; 
-            width: 100%;
-            max-width: 300px;
-            height: 420px; 
+            width: 63.5mm;
+            height: 88.9mm;
+            min-height: 88.9mm;
             border: 1px solid rgba(69, 63, 60, 0.1);
             border-radius: 8px;
             display: flex;
-            padding: 8px; 
+            padding: 2.2mm; 
             position: relative;
             box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             flex-shrink: 0;
+            page-break-inside: avoid;
         }
 
         .card-frame {
@@ -335,21 +336,29 @@
 
         .card-header {
             background-color: #635a55;
-            padding: 8px 10px;
+            padding: 8px 10px 6px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #453f3c;
-            height: 52px;
+            height: 48px;
             flex-shrink: 0;
         }
 
-        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; justify-content: center; }
-        .card-label-display { font-size: 9px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; letter-spacing: 0.5px;}
-        .card-title-display { font-family: 'Constantia', 'Georgia', serif; font-size: 16px; font-weight: bold; color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-title-box { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .card-label-display {
+            font-size: 9px; text-transform: uppercase; font-weight: bold;
+            letter-spacing: 0.5px; color: #dcd3cb;
+        }
+
+        .card-title-display {
+            font-family: 'Constantia', 'Georgia', serif; font-size: 15px; font-weight: bold;
+            color: #fbf6ec; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         .card-tag-box {
-            width: 32px; height: 32px; 
+            width: 30px; height: 30px; 
             background-color: #fbf6ec; 
             border: 1px solid #453f3c; 
             border-radius: 5px;
@@ -357,15 +366,13 @@
             flex-shrink: 0;
             box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.3), inset -1px -1px 2px rgba(255, 255, 255, 0.8);
         }
-        .card-tag-display { font-size: 16px; font-family: 'Constantia', 'Georgia', serif; font-weight: bold; color: #2c2825; }
 
-        .card-body {
-            flex-grow: 1;
-            position: relative;
-            padding: 5px 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+        .card-tag-display {
+            font-size: 16px; 
+            font-family: 'Constantia', 'Georgia', serif; font-weight: bold;
+            color: #2c2825;
+            line-height: 1;
+            transform: translateY(0.5px); 
         }
 
         /* Цветовые темы */
@@ -373,20 +380,31 @@
         .will-theme,  .bg-will  { background-color: #efe3fa !important; }
         .method-theme,.bg-method { background-color: #e3f0fa !important; }
 
+        .card-body {
+            flex-grow: 1;
+            position: relative;
+            padding: 0 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
         .card-rich-text {
             width: 100%;
             height: 100%;
             background: transparent;
             font-family: 'Constantia', 'Cambria', 'Georgia', serif;
-            font-size: 14px;
+            font-size: 14px; 
             font-weight: 400;
             color: #2c2825;
             padding: 0;
             overflow: hidden;
             white-space: pre-wrap;
             word-wrap: break-word;
+            
             --lh: 24px; 
             line-height: var(--lh);
+
             background-image: repeating-linear-gradient(
                 transparent,
                 transparent calc(var(--lh) - 1px),
@@ -396,21 +414,42 @@
             background-attachment: local;
         }
 
-        .card-rich-text b, .card-rich-text strong { font-weight: 800; color: #000; }
+        .card-rich-text b, .card-rich-text strong {
+            font-weight: 800;
+            color: #000;
+        }
 
         .card-footer {
             border-top: 1px dashed rgba(69, 63, 60, 0.25);
-            padding: 5px 12px;
+            padding: 3px 10px 5px 10px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            height: 40px;
+            height: 36px;
             flex-shrink: 0;
-            background-color: #fbf6ec; 
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .footer-label { font-size: 8px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 2px; }
-        .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+        .footer-label {
+            font-size: 7px;
+            font-weight: 800;
+            color: #8a807a;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            margin-bottom: 1px;
+        }
+
+        .card-footer-tags-display {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11px;
+            font-weight: bold;
+            color: #453f3c;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
 
         /* --- СТИЛИ ДЛЯ ВСПЛЫВАЮЩИХ КАРТОЧЕК --- */
         .card-link {
@@ -454,7 +493,7 @@
             .attributes-stack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: start; }
             .skills-tablet-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
             .skills-column .section-title:first-child { margin-top: 0; }
-            .cards-container { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: flex-start; }
+            .cards-container { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
         }
     </style>
 </head>
@@ -755,7 +794,7 @@
                         <div class="card-body ${safeTheme}">
                             <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                         </div>
-                        <div class="card-footer">
+                        <div class="card-footer ${safeTheme}">
                             <div class="footer-label">ТЭГИ</div>
                             <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                         </div>
@@ -872,7 +911,8 @@
                             <div class="card-body ${safeTheme}">
                                 <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                             </div>
-                            <div class="card-footer"> <div class="footer-label">ТЭГИ</div>
+                            <div class="card-footer ${safeTheme}">
+                                <div class="footer-label">ТЭГИ</div>
                                 <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
                             </div>
                         </div>
