@@ -659,6 +659,15 @@
             document.getElementById('tab-' + tabName).classList.add('active');
             btn.classList.add('active');
             window.scrollTo(0, 0);
+
+            // ПРИНУДИТЕЛЬНЫЙ РЕСАЙЗ ТЕКСТА КАРТОЧЕК ПРИ ОТКРЫТИИ ВКЛАДКИ
+            if (tabName === 'cards') {
+                setTimeout(() => {
+                    const container = document.getElementById('cards-container');
+                    container.querySelectorAll('.auto-resize-area').forEach(el => resizeCardText(el));
+                    container.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
+                }, 50); // Ждем отрисовки DOM, чтобы высота стала отличной от 0
+            }
             
             document.querySelectorAll('.mobile-line-textarea').forEach(el => {
                 autoExpandTextarea(el);
@@ -804,7 +813,7 @@
 
             setTimeout(() => {
                 const area = container.querySelector('.auto-resize-area');
-                if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                if (area && typeof window.resizeCardText === 'function') window.resizeCardText(area);
                 
                 const tags = container.querySelector('.auto-resize-tags');
                 if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
@@ -815,8 +824,10 @@
             document.getElementById('card-modal-overlay').classList.remove('active');
         };
 
-        function resizeCardText(area) {
-            if (!area) return;
+        window.resizeCardText = function(area) {
+            // Если карточка скрыта (вкладка не активна), clientHeight будет 0. Отменяем ресайз!
+            if (!area || area.parentElement.clientHeight === 0) return; 
+            
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
 
@@ -826,15 +837,14 @@
             };
 
             update(currentFS);
-            // Добавлен безопасный буфер в 2 пикселя, чтобы избежать обрезания нижних строчек
-            while (area.scrollHeight > (area.parentElement.clientHeight - 2) && currentFS > 8) {
+            while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
             }
-        }
+        };
 
         window.resizeTagsText = function(el) {
-            if (!el) return;
+            if (!el || el.clientWidth === 0) return;
             let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
             el.style.fontSize = currentFS + 'px';
             
@@ -933,10 +943,10 @@
                             container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
                             this.classList.add('expanded');
                             
-                            // Задержка на время CSS-анимации, чтобы скрипт видел правильную высоту раскрытой карточки
+                            // Задержка на время CSS-анимации
                             setTimeout(() => {
                                 const area = this.querySelector('.auto-resize-area');
-                                if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                                if (area && typeof window.resizeCardText === 'function') window.resizeCardText(area);
                                 const tags = this.querySelector('.auto-resize-tags');
                                 if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
                             }, 360);
@@ -944,15 +954,11 @@
                     }
                 });
             });
-
-            // Увеличен таймаут для первичного рендера на мобильных
+            
+            // Если вкладка активна сразу (на всякий случай), пробуем отформатировать
             setTimeout(() => {
-                container.querySelectorAll('.auto-resize-area').forEach(el => {
-                    resizeCardText(el);
-                });
-                container.querySelectorAll('.auto-resize-tags').forEach(el => {
-                    window.resizeTagsText(el);
-                });
+                container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+                container.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
             }, 250);
         }
 
