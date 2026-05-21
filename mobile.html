@@ -826,7 +826,8 @@
             };
 
             update(currentFS);
-            while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
+            // Добавлен безопасный буфер в 2 пикселя, чтобы избежать обрезания нижних строчек
+            while (area.scrollHeight > (area.parentElement.clientHeight - 2) && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
             }
@@ -932,15 +933,19 @@
                             container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
                             this.classList.add('expanded');
                             
-                            const area = this.querySelector('.auto-resize-area');
-                            if (area && typeof resizeCardText === 'function') resizeCardText(area);
-                            const tags = this.querySelector('.auto-resize-tags');
-                            if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                            // Задержка на время CSS-анимации, чтобы скрипт видел правильную высоту раскрытой карточки
+                            setTimeout(() => {
+                                const area = this.querySelector('.auto-resize-area');
+                                if (area && typeof resizeCardText === 'function') resizeCardText(area);
+                                const tags = this.querySelector('.auto-resize-tags');
+                                if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                            }, 360);
                         }
                     }
                 });
             });
 
+            // Увеличен таймаут для первичного рендера на мобильных
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => {
                     resizeCardText(el);
@@ -948,7 +953,7 @@
                 container.querySelectorAll('.auto-resize-tags').forEach(el => {
                     window.resizeTagsText(el);
                 });
-            }, 100);
+            }, 250);
         }
 
         window.setupInputLinks(); 
