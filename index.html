@@ -309,12 +309,11 @@
         .compact-toggle-btn.active { background: #a5c6df; color: #2b2b2b; border-color: #a5c6df; }
 
         .cards-container.compact-mode {
-            /* flex-direction: column; -- Убрано, чтобы разрешить карточкам вставать в несколько колонок */
             gap: 15px; 
-            align-items: flex-start; /* Карточки выравниваются по верхнему краю ряда, не растягиваясь */
+            align-items: flex-start; 
         }
         .cards-container.compact-mode .card {
-            height: 68px; /* Высота шапки */
+            height: 68px; 
             min-height: 68px;
             cursor: pointer;
             overflow: hidden;
@@ -406,7 +405,6 @@
             flex-direction: column;
         }
 
-        /* Тот самый магический блок с привязкой текста к линовке */
         .card-rich-text {
             width: 100%;
             height: 100%;
@@ -716,7 +714,7 @@
             }
         }
 
-        // Авто-ресайз текста на карточках
+        // Авто-ресайз многострочного текста (тело карточки)
         function resizeTextArea(area) {
             if (!area) return;
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
@@ -735,17 +733,19 @@
             }
         }
 
-        // Авто-ресайз тэгов в подвале карточки
-        function resizeTagsText(el) {
-            if (!el) return;
-            let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
+        // Универсальный авто-ресайз однострочного текста (название и тэги карточки)
+        window.resizeSingleLineText = function(el) {
+            if (!el || el.clientWidth === 0) return;
+            
+            let currentFS = parseInt(el.getAttribute('data-max-size')) || 15;
             el.style.fontSize = currentFS + 'px';
             
+            // Если текст не вылезает - цикл даже не начнется, и размер останется максимальным
             while (el.scrollWidth > el.clientWidth && currentFS > 6) {
                 currentFS -= 0.5;
                 el.style.fontSize = currentFS + 'px';
             }
-        }
+        };
 
         document.querySelectorAll('.auto-resize').forEach(input => {
             input.addEventListener('input', function() { resizeText(this); });
@@ -797,7 +797,7 @@
                     <div class="card-header">
                         <div class="card-title-box">
                             <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                            <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                            <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
                         </div>
                         <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                     </div>
@@ -806,7 +806,7 @@
                     </div>
                     <div class="card-footer ${safeTheme}">
                         <div class="footer-label">ТЭГИ</div>
-                        <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
+                        <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
                     </div>
                 </div>
             </div>
@@ -816,8 +816,9 @@
             const area = container.querySelector('.auto-resize-area');
             if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
             
-            const tags = container.querySelector('.auto-resize-tags');
-            if (tags && typeof resizeTagsText === 'function') resizeTagsText(tags);
+            container.querySelectorAll('.auto-resize-line').forEach(el => {
+                if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
+            });
         }, 50);
     };
 
@@ -844,9 +845,9 @@
             display.id = id + '_display';
             display.className = input.className; 
             display.style.cursor = 'text';
-            display.style.display = 'block'; // Block вместо flex, чтобы не съедались пробелы перед span
-            display.style.lineHeight = '30px'; // Выравнивание текста по высоте поля
-            display.style.whiteSpace = 'pre'; // Запрет переноса и жесткое сохранение пробелов
+            display.style.display = 'block'; 
+            display.style.lineHeight = '30px'; 
+            display.style.whiteSpace = 'pre'; 
             display.style.overflow = 'hidden';
             
             display.style.position = 'absolute';
@@ -873,7 +874,7 @@
             input.addEventListener('blur', () => {
                 input.style.opacity = '0';
                 input.style.pointerEvents = 'none';
-                display.style.display = 'block'; // Снова показываем как блок
+                display.style.display = 'block'; 
                 window.updateInputDisplay(id);
             });
             
@@ -971,7 +972,7 @@
                         <div class="card-header">
                             <div class="card-title-box">
                                 <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                                <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                                <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
                             </div>
                             <div class="card-tag-box">
                                 <div class="card-tag-display">${card.card_tag || ''}</div>
@@ -982,7 +983,7 @@
                         </div>
                         <div class="card-footer ${safeTheme}">
                             <div class="footer-label">ТЭГИ</div>
-                            <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
+                            <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
                         </div>
                     </div>
                 </div>
@@ -1003,10 +1004,14 @@
                         this.classList.add('expanded');
                         
                         // Пересчет текста при раскрытии карточки
-                        const area = this.querySelector('.auto-resize-area');
-                        if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
-                        const tags = this.querySelector('.auto-resize-tags');
-                        if (tags && typeof resizeTagsText === 'function') resizeTagsText(tags);
+                        setTimeout(() => {
+                            const area = this.querySelector('.auto-resize-area');
+                            if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
+                            
+                            this.querySelectorAll('.auto-resize-line').forEach(el => {
+                                if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
+                            });
+                        }, 360); // время анимации
                     }
                 }
             });
@@ -1017,8 +1022,8 @@
             container.querySelectorAll('.auto-resize-area').forEach(el => {
                 resizeTextArea(el);
             });
-            container.querySelectorAll('.auto-resize-tags').forEach(el => {
-                resizeTagsText(el);
+            container.querySelectorAll('.auto-resize-line').forEach(el => {
+                window.resizeSingleLineText(el);
             });
         }, 100);
     }
