@@ -45,6 +45,7 @@
             font-family: 'Georgia', serif;
         }
 
+        /* Кнопка возврата на ПК */
         .switch-desktop-btn {
             position: absolute;
             right: 15px;
@@ -269,7 +270,7 @@
             flex-direction: column;
         }
 
-        /* --- СТИЛИ ДЛЯ КАРТОЧЕК И КОМПАКТНОГО РЕЖИМА --- */
+        /* Карточки */
         .cards-view-header {
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 1px solid rgba(69, 63, 60, 0.2);
@@ -650,6 +651,7 @@
             container.classList.toggle('compact-mode');
             btn.classList.toggle('active');
             
+            // При смене режима сворачиваем все карточки
             container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
         };
 
@@ -664,16 +666,13 @@
             if (tabName === 'cards') {
                 setTimeout(() => {
                     const container = document.getElementById('cards-container');
-                    container.querySelectorAll('.auto-resize-area').forEach(el => resizeCardText(el));
-                    container.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
+                    container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+                    container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
                 }, 50); // Ждем отрисовки DOM, чтобы высота стала отличной от 0
             }
             
             document.querySelectorAll('.mobile-line-textarea').forEach(el => {
                 autoExpandTextarea(el);
-                if (typeof window.updateInputDisplay === 'function') {
-                    window.updateInputDisplay(el.id);
-                }
             });
         }
 
@@ -796,7 +795,7 @@
                         <div class="card-header">
                             <div class="card-title-box">
                                 <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                                <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                                <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
                             </div>
                             <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                         </div>
@@ -805,7 +804,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="footer-label">ТЭГИ</div>
-                            <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
+                            <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
                         </div>
                     </div>
                 </div>
@@ -815,8 +814,9 @@
                 const area = container.querySelector('.auto-resize-area');
                 if (area && typeof window.resizeCardText === 'function') window.resizeCardText(area);
                 
-                const tags = container.querySelector('.auto-resize-tags');
-                if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                container.querySelectorAll('.auto-resize-line').forEach(el => {
+                    if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
+                });
             }, 50);
         };
 
@@ -825,7 +825,6 @@
         };
 
         window.resizeCardText = function(area) {
-            // Если карточка скрыта (вкладка не активна), clientHeight будет 0. Отменяем ресайз!
             if (!area || area.parentElement.clientHeight === 0) return; 
             
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
@@ -843,11 +842,14 @@
             }
         };
 
-        window.resizeTagsText = function(el) {
+        // Универсальный авто-ресайз однострочного текста (название и тэги карточки)
+        window.resizeSingleLineText = function(el) {
             if (!el || el.clientWidth === 0) return;
-            let currentFS = parseInt(el.getAttribute('data-max-size')) || 11;
+            
+            let currentFS = parseInt(el.getAttribute('data-max-size')) || 15;
             el.style.fontSize = currentFS + 'px';
             
+            // Срабатывает только если реальная ширина текста выходит за края блока
             while (el.scrollWidth > el.clientWidth && currentFS > 6) {
                 currentFS -= 0.5;
                 el.style.fontSize = currentFS + 'px';
@@ -915,7 +917,7 @@
                             <div class="card-header">
                                 <div class="card-title-box">
                                     <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                                    <div class="card-title-display">${card.card_title || 'Без названия'}</div>
+                                    <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
                                 </div>
                                 <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
                             </div>
@@ -924,7 +926,7 @@
                             </div>
                             <div class="card-footer">
                                 <div class="footer-label">ТЭГИ</div>
-                                <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
+                                <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
                             </div>
                         </div>
                     </div>`;
@@ -947,18 +949,19 @@
                             setTimeout(() => {
                                 const area = this.querySelector('.auto-resize-area');
                                 if (area && typeof window.resizeCardText === 'function') window.resizeCardText(area);
-                                const tags = this.querySelector('.auto-resize-tags');
-                                if (tags && typeof window.resizeTagsText === 'function') window.resizeTagsText(tags);
+                                
+                                this.querySelectorAll('.auto-resize-line').forEach(el => {
+                                    if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
+                                });
                             }, 360);
                         }
                     }
                 });
             });
             
-            // Если вкладка активна сразу (на всякий случай), пробуем отформатировать
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
-                container.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
+                container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
             }, 250);
         }
 
