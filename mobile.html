@@ -20,7 +20,7 @@
 
         .serif-font { font-family: 'Georgia', 'Times New Roman', serif; }
 
-        /* Правильная Шапка мобильной версии */
+        /* Шапка с именем */
         .top-bar {
             background-color: #635a55;
             padding: 12px 15px;
@@ -43,6 +43,7 @@
             text-align: center;
             width: 100%;
             font-family: 'Georgia', serif;
+            padding: 0 40px; /* Чтобы текст не заезжал под кнопку ПК */
         }
 
         /* Кнопка возврата на ПК */
@@ -648,6 +649,7 @@
             container.classList.toggle('compact-mode');
             btn.classList.toggle('active');
             
+            // Сворачиваем карточки
             container.querySelectorAll('.card').forEach(card => card.classList.remove('expanded'));
         };
 
@@ -660,11 +662,13 @@
             btn.classList.add('active');
             window.scrollTo(0, 0);
 
-            // Синхронный, мгновенный пересчет (никаких прыжков и скачков)
+            // Мгновенный пересчет после смены вкладки (так как display: none сбросил ширину)
             if (tabName === 'cards') {
-                const container = document.getElementById('cards-container');
-                container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
-                container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
+                setTimeout(() => {
+                    const container = document.getElementById('cards-container');
+                    container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+                    container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
+                }, 10);
             }
             
             document.querySelectorAll('.mobile-line-textarea').forEach(el => {
@@ -820,50 +824,29 @@
             document.getElementById('card-modal-overlay').classList.remove('active');
         };
 
-        // --- УЛУЧШЕННЫЙ РЕСАЙЗ ---
-        // Изолированный пересчет основного текста: не реагирует на открытие/закрытие,
-        // использует жестко заданную константу максимальной высоты карточки (230px).
+        // --- УЛУЧШЕННЫЙ РЕСАЙЗ ТЕКСТА КАРТОЧКИ ---
+        // Жесткий "in-place" расчет: скрипт сжимает шрифт, пока высота текста не вместится в 230px
+        // (230px — это 100% точное внутреннее пространство для текста в полностью открытой карточке).
         window.resizeCardText = function(area) {
             if (!area || area.clientWidth === 0) return; 
             
-            // Создаем невидимый контейнер, полностью идентичный области текста карточки
-            let ruler = document.getElementById('multi-line-ruler');
-            if (!ruler) {
-                ruler = document.createElement('div');
-                ruler.id = 'multi-line-ruler';
-                ruler.className = 'card-rich-text'; 
-                ruler.style.position = 'absolute';
-                ruler.style.visibility = 'hidden';
-                ruler.style.pointerEvents = 'none';
-                ruler.style.top = '-9999px';
-                ruler.style.left = '-9999px';
-                ruler.style.whiteSpace = 'pre-wrap';
-                ruler.style.wordWrap = 'break-word';
-                document.body.appendChild(ruler);
-            }
-
-            ruler.style.width = area.clientWidth + 'px';
-            ruler.innerHTML = area.innerHTML;
-
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
             const targetHeight = 230; 
 
             const update = (fs) => {
-                ruler.style.fontSize = fs + 'px';
-                ruler.style.lineHeight = (fs * lhRatio) + 'px';
+                area.style.fontSize = fs + 'px';
+                area.style.setProperty('--lh', (fs * lhRatio) + 'px');
             };
 
             update(currentFS);
             
-            while (ruler.offsetHeight > targetHeight && currentFS > 8) {
+            // Даже если карточка визуально скрыта/сжата до 68px, area.scrollHeight всегда
+            // отдаст реальную высоту всего содержимого.
+            while (area.scrollHeight > targetHeight && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
             }
-
-            // Переносим вычисленный идеальный размер в саму карточку 
-            area.style.fontSize = currentFS + 'px';
-            area.style.setProperty('--lh', (currentFS * lhRatio) + 'px');
         };
 
         // Абсолютно точный метод ресайза названий: 
@@ -878,7 +861,7 @@
                 ruler.style.position = 'absolute';
                 ruler.style.visibility = 'hidden';
                 ruler.style.whiteSpace = 'nowrap'; 
-                ruler.style.width = 'auto'; // Позволяем бесконечно расти вширь
+                ruler.style.width = 'auto'; 
                 ruler.style.pointerEvents = 'none';
                 ruler.style.top = '-9999px';
                 ruler.style.left = '-9999px';
@@ -900,7 +883,7 @@
 
             ruler.style.fontSize = currentFS + 'px';
             
-            // Запас в 4 пикселя, чтобы не допустить появления "..." до того, как сработает скрипт
+            // Запас в 4 пикселя, чтобы не допустить обрезки в "..." до того, как сработает скрипт
             const targetWidth = el.clientWidth - 4; 
 
             while (ruler.offsetWidth > targetWidth && currentFS > 6) {
@@ -988,7 +971,7 @@
                 container.insertAdjacentHTML('beforeend', html);
             });
 
-            // Логика раскрытия (без ресайза текста, так как он уже идеального размера!)
+            // Логика раскрытия (без ресайза текста внутри клика, так как он уже идеального размера!)
             container.querySelectorAll('.card').forEach(card => {
                 card.addEventListener('click', function(e) {
                     if (e.target.classList.contains('card-link')) return; 
@@ -1008,7 +991,7 @@
             setTimeout(() => {
                 container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
                 container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
-            }, 50);
+            }, 10);
         }
 
         window.setupInputLinks(); 
