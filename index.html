@@ -281,7 +281,6 @@
             flex-direction: column;
         }
 
-
         /* --- СТИЛИ ДЛЯ КАРТОЧЕК --- */
         .cards-view-section {
             margin-top: 40px;
@@ -715,10 +714,14 @@
         }
 
         // Авто-ресайз многострочного текста (тело карточки)
-        function resizeTextArea(area) {
-            if (!area) return;
+        window.resizeCardText = function(area) {
+            // Если карточка скрыта или не имеет ширины, ничего не делаем
+            if (!area || area.clientWidth === 0) return; 
+            
             let currentFS = parseInt(area.getAttribute('data-max-size')) || 14;
             const lhRatio = 1.7; 
+            // Жестко заданная доступная высота текста для раскрытой карточки (в пикселях)
+            const targetHeight = 230; 
 
             const update = (fs) => {
                 area.style.fontSize = fs + 'px';
@@ -727,11 +730,12 @@
 
             update(currentFS);
             
-            while (area.scrollHeight > area.parentElement.clientHeight && currentFS > 8) {
+            // Если высота самого текста больше доступного места, сжимаем его
+            while (area.scrollHeight > targetHeight && currentFS > 8) {
                 currentFS -= 0.5;
                 update(currentFS);
             }
-        }
+        };
 
         // Универсальный 100% точный метод ресайза однострочного текста (Названия и Тэги карточек)
         window.resizeSingleLineText = function(el) {
@@ -743,7 +747,7 @@
                 ruler.id = 'single-line-ruler';
                 ruler.style.position = 'absolute';
                 ruler.style.visibility = 'hidden';
-                ruler.style.whiteSpace = 'nowrap'; // Текст всегда в одну линию
+                ruler.style.whiteSpace = 'nowrap';
                 ruler.style.pointerEvents = 'none';
                 ruler.style.top = '-9999px';
                 ruler.style.left = '-9999px';
@@ -765,16 +769,15 @@
 
             ruler.style.fontSize = currentFS + 'px';
             
-            // +0.5 пикселя запаса, чтобы избежать ненужного сжатия при погрешности браузера
-            const targetWidth = el.clientWidth + 0.5; 
+            // Буфер 4px от текущей ширины блока для защиты от обрезания в "..."
+            const targetWidth = el.clientWidth - 4; 
 
-            // Сжимаем ТОЛЬКО если физическая ширина невидимой линейки больше ширины блока
+            // Сжимаем ТОЛЬКО если текст шире, чем контейнер (шрифт остается базовым, если он вмещается)
             while (ruler.getBoundingClientRect().width > targetWidth && currentFS > 6) {
                 currentFS -= 0.5;
                 ruler.style.fontSize = currentFS + 'px';
             }
 
-            // Если размер так и остался изначальным (15px или 11px) - он применится без изменений
             el.style.fontSize = currentFS + 'px';
         };
 
@@ -845,12 +848,12 @@
 
         setTimeout(() => {
             const area = container.querySelector('.auto-resize-area');
-            if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
+            if (area && typeof window.resizeCardText === 'function') window.resizeCardText(area);
             
             container.querySelectorAll('.auto-resize-line').forEach(el => {
                 if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
             });
-        }, 50);
+        }, 10);
     };
 
     window.closeCardModal = function() {
@@ -1033,30 +1036,17 @@
                     } else {
                         container.querySelectorAll('.card').forEach(c => c.classList.remove('expanded'));
                         this.classList.add('expanded');
-                        
-                        // Пересчет текста при раскрытии карточки
-                        setTimeout(() => {
-                            const area = this.querySelector('.auto-resize-area');
-                            if (area && typeof resizeTextArea === 'function') resizeTextArea(area);
-                            
-                            this.querySelectorAll('.auto-resize-line').forEach(el => {
-                                if (typeof window.resizeSingleLineText === 'function') window.resizeSingleLineText(el);
-                            });
-                        }, 360); // время анимации
+                        // Текст больше НЕ пересчитывается при клике — он уже нужного размера!
                     }
                 }
             });
         });
 
-        // Запускаем подгонку текста
+        // Запускаем подгонку текста сразу при загрузке 
         setTimeout(() => {
-            container.querySelectorAll('.auto-resize-area').forEach(el => {
-                resizeTextArea(el);
-            });
-            container.querySelectorAll('.auto-resize-line').forEach(el => {
-                window.resizeSingleLineText(el);
-            });
-        }, 100);
+            container.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+            container.querySelectorAll('.auto-resize-line').forEach(el => window.resizeSingleLineText(el));
+        }, 10);
     }
 
     // Инициализация
