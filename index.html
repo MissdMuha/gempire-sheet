@@ -733,18 +733,49 @@
             }
         }
 
-        // Универсальный авто-ресайз однострочного текста (название и тэги карточки)
+        // Универсальный 100% точный метод ресайза однострочного текста (Названия и Тэги карточек)
         window.resizeSingleLineText = function(el) {
             if (!el || el.clientWidth === 0) return;
             
-            let currentFS = parseInt(el.getAttribute('data-max-size')) || 15;
-            el.style.fontSize = currentFS + 'px';
-            
-            // Если текст не вылезает - цикл даже не начнется, и размер останется максимальным
-            while (el.scrollWidth > el.clientWidth && currentFS > 6) {
-                currentFS -= 0.5;
-                el.style.fontSize = currentFS + 'px';
+            let ruler = document.getElementById('single-line-ruler');
+            if (!ruler) {
+                ruler = document.createElement('div');
+                ruler.id = 'single-line-ruler';
+                ruler.style.position = 'absolute';
+                ruler.style.visibility = 'hidden';
+                ruler.style.whiteSpace = 'nowrap'; // Текст всегда в одну линию
+                ruler.style.pointerEvents = 'none';
+                ruler.style.top = '-9999px';
+                ruler.style.left = '-9999px';
+                document.body.appendChild(ruler);
             }
+
+            const style = window.getComputedStyle(el);
+            ruler.style.fontFamily = style.fontFamily;
+            ruler.style.fontWeight = style.fontWeight;
+            ruler.style.letterSpacing = style.letterSpacing;
+            ruler.style.textTransform = style.textTransform;
+            
+            ruler.textContent = el.textContent || el.innerText;
+
+            let currentFS = parseInt(el.getAttribute('data-max-size'));
+            if (!currentFS) {
+                currentFS = el.classList.contains('card-footer-tags-display') ? 11 : 15;
+            }
+
+            ruler.style.fontSize = currentFS + 'px';
+            
+            // +0.5 пикселя запаса, чтобы избежать ненужного сжатия при погрешности браузера
+            const targetWidth = el.clientWidth + 0.5; 
+
+            // Сжимаем ТОЛЬКО если физическая ширина невидимой линейки больше ширины блока
+            while (ruler.getBoundingClientRect().width > targetWidth && currentFS > 6) {
+                currentFS -= 0.5;
+                ruler.style.fontSize = currentFS + 'px';
+            }
+
+            // Если размер так и остался изначальным (15px или 11px) - он применится без изменений
+            el.style.fontSize = currentFS + 'px';
         };
 
         document.querySelectorAll('.auto-resize').forEach(input => {
