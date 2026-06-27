@@ -62,6 +62,26 @@
         }
         .btn-submit:hover { background-color: #7a706a; }
 
+        /* Плашка режима редактирования */
+        .edit-banner {
+            background: #4a443f;
+            border: 1px solid #c8b88f;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 13px;
+            color: #fbf6ec;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .edit-banner.active { display: flex; }
+        .edit-banner b { color: #c8b88f; }
+        .btn-cancel-edit {
+            background: #7a706a; color: #fbf6ec; border: none;
+            padding: 9px; border-radius: 5px; font-weight: bold; cursor: pointer;
+        }
+        .btn-cancel-edit:hover { background: #8d827b; }
+
         /* Идентичные стили для карточек (Предпросмотр + Список) */
         .preview-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .card {
@@ -101,14 +121,40 @@
         /* Список существующих карточек */
         .cards-list-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center;}
         .cards-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;}
-        .mini-card-wrapper { display: flex; flex-direction: column; gap: 10px; align-items: center; background: #38332f; padding: 10px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .owner-badge { background: #635a55; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #fbf6ec;}
+        .mini-card-wrapper { display: flex; flex-direction: column; gap: 10px; align-items: center; background: #38332f; padding: 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: calc(63.5mm + 24px); }
+        .mini-card-wrapper.is-editing { outline: 2px solid #c8b88f; }
+
+        /* Владельцы (чипы) */
+        .owners-block { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+        .owners-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #dcd3cb; font-weight: bold; display: flex; justify-content: space-between; }
+        .copies-count { color: #a5c6df; }
+        .owners-row { display: flex; flex-wrap: wrap; gap: 6px; }
+        .owner-chip {
+            background: #635a55; padding: 3px 5px 3px 9px; border-radius: 4px;
+            font-size: 12px; font-weight: bold; color: #fbf6ec;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .owner-chip button {
+            background: transparent; border: none; color: #dcd3cb;
+            cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px;
+        }
+        .owner-chip button:hover { color: #fff; }
+
+        .add-owner-row { display: flex; gap: 6px; width: 100%; }
+        .add-owner-row input { flex: 1; padding: 7px 8px; font-size: 12px; }
+        .add-owner-row button {
+            background-color: #635a55; color: #fbf6ec; border: none;
+            padding: 0 12px; border-radius: 5px; font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        .add-owner-row button:hover { background-color: #7a706a; }
         
         /* Кнопки управления карточкой */
-        .card-controls { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 5px; }
-        .btn-copy { background-color: #a5c6df; color: #2b2b2b; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
+        .card-controls { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 2px; }
+        .btn-edit { background-color: #c8b88f; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-edit:hover { background-color: #b9a878; }
+        .btn-copy { background-color: #a5c6df; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-copy:hover { background-color: #8db5d2; }
-        .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-delete:hover { background-color: #c78b98; }
 
         .card-link { color: #4a76a8; text-decoration: underline; text-decoration-style: dashed; font-weight: bold; }
@@ -120,9 +166,14 @@
 
     <div class="admin-container">
         <form class="form-section" id="add-card-form">
-            <div class="form-group">
+            <div class="edit-banner" id="edit-banner">
+                <span id="edit-banner-text"></span>
+                <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">Отменить редактирование</button>
+            </div>
+
+            <div class="form-group" id="owner-field-group">
                 <label>ID Игрока (Кому выдать)</label>
-                <input type="text" id="input_owner_id" placeholder="Например: 1, 404-elf" required>
+                <input type="text" id="input_owner_id" placeholder="Например: 1, 404-elf">
             </div>
             <div class="form-group">
                 <label>Тема (Цвет)</label>
@@ -138,7 +189,7 @@
             </div>
             <div class="form-group">
                 <label>Название способности</label>
-                <input type="text" id="input_title" placeholder="Например: Тяжелый удар" required oninput="updatePreview()">
+                <input type="text" id="input_title" placeholder="Например: Тяжелый удар" oninput="updatePreview()">
             </div>
             <div class="form-group">
                 <label>Метка (Правый квадрат)</label>
@@ -153,7 +204,7 @@
                 <input type="text" id="input_footer" placeholder="Оружие, Контакт, Сила" oninput="updatePreview()">
             </div>
             
-            <button type="submit" class="btn-submit">Выдать карточку</button>
+            <button type="submit" class="btn-submit" id="submit-btn">Выдать карточку</button>
             <div id="status-msg" style="color: #a5c6df; font-weight: bold; text-align: center; height: 20px;"></div>
         </form>
 
@@ -228,6 +279,25 @@
             return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link">$1</span>');
         }
 
+        // Экранирование для безопасной вставки в HTML-атрибуты/текст
+        function esc(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Поля содержимого карточки (всё, кроме id и owner_id)
+        const CONTENT_FIELDS = ['theme', 'card_label', 'card_title', 'card_tag', 'card_description', 'card_footer_tags'];
+
+        // Подпись карточки по содержимому — одинаковая подпись = «одна и та же карточка»
+        function cardSignature(c) {
+            return CONTENT_FIELDS.map(f => {
+                let v = c[f] == null ? '' : String(c[f]);
+                if (f === 'theme') v = v.trim();
+                return v;
+            }).join('\u0001');
+        }
+
         // Живое обновление предпросмотра
         window.updatePreview = function() {
             document.getElementById('prev_label').innerText = document.getElementById('input_label').value || 'НАВЫК';
@@ -243,55 +313,129 @@
             const theme = document.getElementById('input_theme').value;
             document.getElementById('prev_theme').className = `card-body ${theme}`;
             
-            // Подгоняем текст под линовку карточки и ресайзим тэги
             window.resizeCardText(descBox);
             window.resizeTagsText(footerEl);
         };
         
         document.getElementById('input_theme').addEventListener('change', window.updatePreview);
 
-        // Храним карточки в памяти для копирования
-        window.allCards = []; 
+        // Состояние
+        window.allGroups = [];          // сгруппированные карточки
+        window.editingGroup = null;     // { ids: [...] } когда редактируем
 
-        // Функция загрузки всех карточек
+        // Считываем содержимое из формы
+        function readFormContent() {
+            return {
+                theme: document.getElementById('input_theme').value,
+                card_label: document.getElementById('input_label').value,
+                card_title: document.getElementById('input_title').value,
+                card_tag: document.getElementById('input_tag').value,
+                card_description: document.getElementById('input_description').value,
+                card_footer_tags: document.getElementById('input_footer').value
+            };
+        }
+
+        // Заполняем форму содержимым группы
+        function fillFormFromContent(c) {
+            const themeSelect = document.getElementById('input_theme');
+            const theme = (c.theme || '').trim();
+            const options = Array.from(themeSelect.options).map(o => o.value);
+            if (options.includes(theme)) themeSelect.value = theme;
+
+            document.getElementById('input_label').value = c.card_label || '';
+            document.getElementById('input_title').value = c.card_title || '';
+            document.getElementById('input_tag').value = c.card_tag || '';
+            document.getElementById('input_description').value = c.card_description || '';
+            document.getElementById('input_footer').value = c.card_footer_tags || '';
+            window.updatePreview();
+        }
+
+        function setStatus(text, ok = true) {
+            const s = document.getElementById('status-msg');
+            s.style.color = ok ? '#a5c6df' : '#d4a3ae';
+            s.innerText = text;
+        }
+
+        // Загрузка и группировка карточек
         async function fetchCards() {
             const { data: cards, error } = await supabase.from('cards').select('*').order('owner_id');
             const grid = document.getElementById('existing-cards-grid');
             grid.innerHTML = '';
 
             if (error) {
-                grid.innerHTML = `<p style="color: red;">Ошибка загрузки базы: ${error.message}</p>`;
+                grid.innerHTML = `<p style="color: red;">Ошибка загрузки базы: ${esc(error.message)}</p>`;
                 return;
             }
 
-            window.allCards = cards;
+            // Группируем по подписи содержимого
+            const map = new Map();
+            (cards || []).forEach(card => {
+                const sig = cardSignature(card);
+                if (!map.has(sig)) {
+                    const group = { sig, owners: [] };
+                    CONTENT_FIELDS.forEach(f => group[f] = card[f]);
+                    map.set(sig, group);
+                }
+                map.get(sig).owners.push({ id: card.id, owner_id: card.owner_id });
+            });
 
-            cards.forEach(card => {
-                const safeTheme = card.theme ? card.theme.trim() : '';
+            window.allGroups = Array.from(map.values());
+            // владельцев — по порядку для стабильности
+            window.allGroups.forEach(g => g.owners.sort((a, b) =>
+                String(a.owner_id).localeCompare(String(b.owner_id), 'ru', { numeric: true })
+            ));
+
+            if (window.allGroups.length === 0) {
+                grid.innerHTML = '<p style="color:#8a807a;">Пока ни одной карточки не выдано.</p>';
+                return;
+            }
+
+            window.allGroups.forEach((g, index) => {
+                const safeTheme = g.theme ? g.theme.trim() : '';
+                const isEditing = window.editingGroup &&
+                    g.owners.some(o => window.editingGroup.ids.includes(o.id));
+
+                const chips = g.owners.map(o => `
+                    <span class="owner-chip">
+                        ${esc(o.owner_id)}
+                        <button title="Убрать у этого игрока" onclick="removeFromOwner('${esc(o.id)}')">&times;</button>
+                    </span>`).join('');
+
                 const html = `
-                    <div class="mini-card-wrapper">
-                        <div class="owner-badge">Владелец: ${card.owner_id}</div>
+                    <div class="mini-card-wrapper ${isEditing ? 'is-editing' : ''}">
+                        <div class="owners-block">
+                            <div class="owners-label">
+                                <span>Выдано игрокам</span>
+                                <span class="copies-count">${g.owners.length} коп.</span>
+                            </div>
+                            <div class="owners-row">${chips}</div>
+                            <div class="add-owner-row">
+                                <input type="text" id="add-owner-input-${index}" placeholder="ID игрока…">
+                                <button onclick="addOwnerToGroup(${index})">+ Выдать</button>
+                            </div>
+                        </div>
                         <div class="card">
                             <div class="card-frame">
                                 <div class="card-header">
                                     <div class="card-title-box">
-                                        <div class="card-label-display">${card.card_label || ''}</div>
-                                        <div class="card-title-display">${card.card_title || ''}</div>
+                                        <div class="card-label-display">${esc(g.card_label || '')}</div>
+                                        <div class="card-title-display">${esc(g.card_title || '')}</div>
                                     </div>
-                                    <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                                    <div class="card-tag-box"><div class="card-tag-display">${esc(g.card_tag || '')}</div></div>
                                 </div>
                                 <div class="card-body ${safeTheme}">
-                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
+                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(g.card_description || '')}</div>
                                 </div>
                                 <div class="card-footer">
                                     <div class="footer-label">ТЭГИ</div>
-                                    <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${card.card_footer_tags || ''}</div>
+                                    <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${esc(g.card_footer_tags || '')}</div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-controls">
-                            <button class="btn-copy" onclick="copyToForm('${card.id}')">Взять как шаблон</button>
-                            <button class="btn-delete" onclick="deleteCard('${card.id}')">Удалить у игрока</button>
+                            <button class="btn-edit" onclick="editGroup(${index})">✎ Редактировать у всех</button>
+                            <button class="btn-copy" onclick="copyToForm(${index})">Взять как шаблон</button>
+                            <button class="btn-delete" onclick="deleteGroup(${index})">Удалить у всех (${g.owners.length})</button>
                         </div>
                     </div>
                 `;
@@ -300,89 +444,143 @@
 
             // Авторесайз для всех карточек в списке
             setTimeout(() => {
-                grid.querySelectorAll('.auto-resize-area').forEach(el => {
-                    window.resizeCardText(el);
-                });
-                grid.querySelectorAll('.auto-resize-tags').forEach(el => {
-                    window.resizeTagsText(el);
-                });
+                grid.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+                grid.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
             }, 100);
         }
 
-        // Функция копирования в форму
-        window.copyToForm = function(cardId) {
-            const card = window.allCards.find(c => c.id === cardId);
-            if(card) {
-                if (card.theme) {
-                    const themeSelect = document.getElementById('input_theme');
-                    const options = Array.from(themeSelect.options).map(o => o.value);
-                    if(options.includes(card.theme.trim())) {
-                        themeSelect.value = card.theme.trim();
-                    }
-                }
-                
-                document.getElementById('input_label').value = card.card_label || '';
-                document.getElementById('input_title').value = card.card_title || '';
-                document.getElementById('input_tag').value = card.card_tag || '';
-                document.getElementById('input_description').value = card.card_description || '';
-                document.getElementById('input_footer').value = card.card_footer_tags || '';
-                
-                window.updatePreview();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                
-                const statusMsg = document.getElementById('status-msg');
-                statusMsg.style.color = '#a5c6df';
-                statusMsg.innerText = 'Карточка перенесена в форму!';
-                setTimeout(() => statusMsg.innerText = '', 3000);
-            }
+        // ВЗЯТЬ КАК ШАБЛОН (создать новую карточку на основе существующей)
+        window.copyToForm = function(index) {
+            cancelEdit();
+            const g = window.allGroups[index];
+            if (!g) return;
+            fillFormFromContent(g);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setStatus('Содержимое перенесено в форму. Укажите игрока и выдайте.');
+            setTimeout(() => setStatus(''), 3000);
         };
 
-        // Отправка формы (Добавление карточки в базу)
-        document.getElementById('add-card-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const statusMsg = document.getElementById('status-msg');
-            statusMsg.style.color = '#a5c6df';
-            statusMsg.innerText = 'Отправка...';
+        // РЕДАКТИРОВАНИЕ группы (правит все копии у всех владельцев)
+        window.editGroup = function(index) {
+            const g = window.allGroups[index];
+            if (!g) return;
 
-            const newCard = {
-                owner_id: document.getElementById('input_owner_id').value,
-                theme: document.getElementById('input_theme').value,
-                card_label: document.getElementById('input_label').value,
-                card_title: document.getElementById('input_title').value,
-                card_tag: document.getElementById('input_tag').value,
-                card_description: document.getElementById('input_description').value,
-                card_footer_tags: document.getElementById('input_footer').value
-            };
+            fillFormFromContent(g);
+            window.editingGroup = { ids: g.owners.map(o => o.id) };
+
+            const banner = document.getElementById('edit-banner');
+            const ownersText = g.owners.map(o => o.owner_id).join(', ');
+            document.getElementById('edit-banner-text').innerHTML =
+                `<b>Режим редактирования.</b><br>Изменения применятся ко всем копиям (${g.owners.length}) у игроков: ${esc(ownersText)}.`;
+            banner.classList.add('active');
+
+            // Поле «кому выдать» при редактировании не нужно
+            document.getElementById('owner-field-group').style.display = 'none';
+            document.getElementById('submit-btn').innerText = `Сохранить изменения (${g.owners.length})`;
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // подсветим карточку в списке
+            fetchCards();
+        };
+
+        window.cancelEdit = function() {
+            window.editingGroup = null;
+            document.getElementById('edit-banner').classList.remove('active');
+            document.getElementById('owner-field-group').style.display = '';
+            document.getElementById('submit-btn').innerText = 'Выдать карточку';
+        };
+
+        // Дораздать карточку ещё одному игроку
+        window.addOwnerToGroup = async function(index) {
+            const g = window.allGroups[index];
+            if (!g) return;
+            const input = document.getElementById('add-owner-input-' + index);
+            const owner = input.value.trim();
+            if (!owner) { input.focus(); return; }
+
+            const newCard = { owner_id: owner };
+            CONTENT_FIELDS.forEach(f => newCard[f] = g[f]);
 
             const { error } = await supabase.from('cards').insert([newCard]);
+            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
+            else { setStatus(`Выдано игроку ${owner}.`); setTimeout(() => setStatus(''), 3000); }
+            fetchCards();
+        };
 
-            if (error) {
-                statusMsg.style.color = '#d4a3ae';
-                statusMsg.innerText = `Ошибка: ${error.message}`;
+        // Убрать карточку у одного игрока
+        window.removeFromOwner = async function(rowId) {
+            if (!confirm('Убрать эту карточку у данного игрока?')) return;
+            const { error } = await supabase.from('cards').delete().eq('id', rowId);
+            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
+            // если редактировали именно эту строку — обновим список ids
+            if (window.editingGroup) {
+                window.editingGroup.ids = window.editingGroup.ids.filter(id => id !== rowId);
+                if (window.editingGroup.ids.length === 0) cancelEdit();
+            }
+            fetchCards();
+        };
+
+        // Удалить карточку у всех владельцев
+        window.deleteGroup = async function(index) {
+            const g = window.allGroups[index];
+            if (!g) return;
+            if (!confirm(`Удалить эту карточку у всех ${g.owners.length} игроков навсегда?`)) return;
+            const ids = g.owners.map(o => o.id);
+            const { error } = await supabase.from('cards').delete().in('id', ids);
+            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
+            if (window.editingGroup && window.editingGroup.ids.some(id => ids.includes(id))) cancelEdit();
+            fetchCards();
+        };
+
+        // Отправка формы: либо выдача новой, либо сохранение правок
+        document.getElementById('add-card-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = readFormContent();
+
+            if (!content.card_title.trim()) {
+                setStatus('Укажите название способности.', false);
+                return;
+            }
+
+            if (window.editingGroup) {
+                // РЕЖИМ РЕДАКТИРОВАНИЯ — обновляем все копии
+                setStatus('Сохранение…');
+                const ids = window.editingGroup.ids;
+                if (!ids.length) { cancelEdit(); return; }
+                const { error } = await supabase.from('cards').update(content).in('id', ids);
+                if (error) {
+                    setStatus(`Ошибка: ${error.message}`, false);
+                } else {
+                    setStatus(`Сохранено для ${ids.length} игрок(ов).`);
+                    setTimeout(() => setStatus(''), 3000);
+                    cancelEdit();
+                    fetchCards();
+                }
             } else {
-                statusMsg.style.color = '#a5c6df';
-                statusMsg.innerText = 'Успешно выдано игроку!';
-                setTimeout(() => statusMsg.innerText = '', 3000);
-                
-                // Очищаем форму
-                document.getElementById('input_title').value = '';
-                document.getElementById('input_tag').value = '';
-                document.getElementById('input_description').value = '';
-                document.getElementById('input_footer').value = '';
-                window.updatePreview();
-                fetchCards(); 
+                // РЕЖИМ ВЫДАЧИ — создаём новую карточку
+                const owner = document.getElementById('input_owner_id').value.trim();
+                if (!owner) { setStatus('Укажите ID игрока.', false); return; }
+
+                setStatus('Отправка…');
+                const newCard = Object.assign({ owner_id: owner }, content);
+                const { error } = await supabase.from('cards').insert([newCard]);
+
+                if (error) {
+                    setStatus(`Ошибка: ${error.message}`, false);
+                } else {
+                    setStatus('Успешно выдано игроку!');
+                    setTimeout(() => setStatus(''), 3000);
+                    document.getElementById('input_title').value = '';
+                    document.getElementById('input_tag').value = '';
+                    document.getElementById('input_description').value = '';
+                    document.getElementById('input_footer').value = '';
+                    window.updatePreview();
+                    fetchCards();
+                }
             }
         });
 
-        // Функция удаления карточки
-        window.deleteCard = async function(cardId) {
-            if(confirm('Точно удалить эту карточку у игрока навсегда?')) {
-                await supabase.from('cards').delete().eq('id', cardId);
-                fetchCards();
-            }
-        };
-
-        // Инициализация при загрузке страницы
+        // Инициализация
         fetchCards();
         window.updatePreview();
     </script>
