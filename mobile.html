@@ -494,6 +494,35 @@
             .skills-column .section-title:first-child { margin-top: 0; }
             .cards-container { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
         }
+
+        /* --- Панель оформления заметок --- */
+        .notes-toolbar {
+            display: flex; gap: 2px; background: #453f3c; border-radius: 6px; padding: 3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        }
+        .notes-toolbar button {
+            background: transparent; border: none; color: #fbf6ec; font-family: 'Georgia', serif; font-size: 15px;
+            min-width: 44px; height: 36px; padding: 0 8px; border-radius: 4px; cursor: pointer;
+        }
+        .notes-toolbar button:hover { background: rgba(251, 246, 236, 0.12); }
+        .notes-toolbar button.active { background: rgba(251, 246, 236, 0.28); }
+        .notes-toolbar.sticky { position: sticky; top: 0; z-index: 5; width: fit-content; margin-bottom: 10px; }
+
+        /* --- Заметки --- */
+        .notes-editor {
+            min-height: 55vh; outline: none; border: 1.5px solid #453f3c; border-radius: 8px; padding: 0 12px 28px;
+            background-color: #fbf6ec;
+            background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, rgba(69, 63, 60, 0.15) 27px, rgba(69, 63, 60, 0.15) 28px);
+            line-height: 28px; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; font-size: 15px; color: #38332f;
+            overflow-wrap: break-word;
+        }
+        .notes-editor h3 { margin: 0; font-family: 'Georgia', serif; font-size: 17px; line-height: 28px; color: #453f3c; }
+        .notes-editor div, .notes-editor p { margin: 0; }
+        .notes-editor:empty::before { content: attr(data-placeholder); color: #a89f97; }
+
+        /* Пять вкладок внизу — чуть компактнее подписи */
+        .nav-btn { font-size: 13px; letter-spacing: 0.5px; }
+        @media (max-width: 370px) { .nav-btn { font-size: 11px; letter-spacing: 0; } }
     </style>
 </head>
 <body>
@@ -585,6 +614,12 @@
                 <textarea id="t2_4" class="mobile-line-textarea" rows="1"></textarea>
                 <textarea id="t2_5" class="mobile-line-textarea" rows="1"></textarea>
                 <textarea id="t2_6" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_7" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_8" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_9" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_10" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_11" class="mobile-line-textarea" rows="1"></textarea>
+                <textarea id="t2_12" class="mobile-line-textarea" rows="1"></textarea>
                 
                 <div class="section-title serif-font">Третья Ступень</div>
                 <textarea id="t3_1" class="mobile-line-textarea" rows="1"></textarea>
@@ -604,15 +639,43 @@
                 <textarea id="dogma_5" class="mobile-line-textarea" rows="1"></textarea>
                 <textarea id="dogma_6" class="mobile-line-textarea" rows="1"></textarea>
                 
-                <div class="section-title serif-font">Снаряжение и Предметы</div>
-                <textarea id="equip_1" class="mobile-line-textarea" rows="1"></textarea>
-                <textarea id="equip_2" class="mobile-line-textarea" rows="1"></textarea>
-                <textarea id="equip_3" class="mobile-line-textarea" rows="1"></textarea>
-                <textarea id="equip_4" class="mobile-line-textarea" rows="1"></textarea>
-                <textarea id="equip_5" class="mobile-line-textarea" rows="1"></textarea>
             </div>
 
         </div>
+    </div>
+
+    <div id="tab-items" class="tab-content">
+        <div class="section-title serif-font" style="margin-top: 0;">Снаряжение и Предметы</div>
+        <textarea id="equip_1" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_2" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_3" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_4" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_5" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_6" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_7" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_8" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_9" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_10" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_11" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_12" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_13" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_14" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_15" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_16" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_17" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_18" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_19" class="mobile-line-textarea" rows="1"></textarea>
+        <textarea id="equip_20" class="mobile-line-textarea" rows="1"></textarea>
+    </div>
+
+    <div id="tab-notes" class="tab-content">
+        <div class="section-title serif-font" style="margin-top: 0;">Заметки</div>
+        <div id="notes-toolbar" class="notes-toolbar sticky">
+            <button type="button" data-cmd="bold" title="Жирный (Ctrl+B)"><b>Ж</b></button>
+            <button type="button" data-cmd="italic" title="Курсив (Ctrl+I)"><i>К</i></button>
+            <button type="button" data-cmd="heading" title="Заголовок">Заголовок</button>
+        </div>
+        <div id="notes" class="notes-editor" contenteditable="true" spellcheck="true" data-placeholder="Записи по сессиям, NPC, зацепки… Выделите текст, чтобы оформить его кнопками выше."></div>
     </div>
 
     <div id="tab-cards" class="tab-content">
@@ -629,7 +692,9 @@
     <div class="bottom-nav">
         <button class="nav-btn active" onclick="switchTab('main', this)">I</button>
         <button class="nav-btn" onclick="switchTab('skills', this)">II+</button>
-        <button class="nav-btn" onclick="switchTab('cards', this)">Карточки</button>
+        <button class="nav-btn" onclick="switchTab('items', this)">Вещи</button>
+        <button class="nav-btn" onclick="switchTab('notes', this)">Заметки</button>
+        <button class="nav-btn" onclick="switchTab('cards', this)">Карты</button>
     </div>
 
     <div id="card-modal-overlay" class="modal-overlay" onclick="closeCardModal()">
@@ -690,6 +755,7 @@
 
     <script type="module">
         import { createClient } from './lib/supabase.js'
+        import { setupNotesEditor } from './lib/notes.js'
 
         const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
@@ -959,6 +1025,7 @@
         // Раскладывает данные персонажа по полям (поле, которое сейчас редактируют, не трогаем)
         function applyCharacter(character) {
             for (const key in character) {
+                if (key === 'notes') { notesEditor.setHtml(character[key]); continue; }
                 const input = document.getElementById(key);
                 if (input && document.activeElement !== input) {
                     input.value = character[key] || '';
@@ -992,24 +1059,32 @@
         }
 
         // 2. СОХРАНЕНИЕ В БАЗУ (Лист персонажа)
-        document.addEventListener('change', async (event) => {
-            const target = event.target;
-            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
-                const fieldId = target.id;
-                if (fieldId && charId) {
-                    pendingSaves++;
-                    const { error } = await supabase.from('characters').update({ [fieldId]: target.value }).eq('id', charId);
-                    pendingSaves--;
-                    // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
-                    if (error && error.code !== 'PGRST204') {
-                        lastRequestOk = false;
-                        showNotice('Не удалось сохранить: ' + error.message);
-                    } else {
-                        lastRequestOk = true;
-                    }
-                    updateConnStatus();
-                }
+        async function saveField(fieldId, value) {
+            if (!fieldId || !charId) return;
+            pendingSaves++;
+            const { error } = await supabase.from('characters').update({ [fieldId]: value }).eq('id', charId);
+            pendingSaves--;
+            // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
+            if (error && error.code !== 'PGRST204') {
+                lastRequestOk = false;
+                showNotice('Не удалось сохранить: ' + error.message);
+            } else {
+                lastRequestOk = true;
             }
+            updateConnStatus();
+        }
+
+        document.addEventListener('change', (event) => {
+            const target = event.target;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') saveField(target.id, target.value);
+        });
+
+        // Заметки с форматированием (lib/notes.js)
+        const notesEditor = setupNotesEditor({
+            editor: document.getElementById('notes'),
+            toolbar: document.getElementById('notes-toolbar'),
+            floating: false,
+            onSave: (html) => saveField('notes', html)
         });
 
         // 3. REALTIME (Обновления от Мастера). Без ID персонажа подписываться не на что

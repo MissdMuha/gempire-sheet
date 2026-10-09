@@ -499,6 +499,48 @@
             background: transparent; border: none; color: #fbf6ec;
             font-size: 30px; cursor: pointer; font-weight: bold;
         }
+
+        /* --- Панель оформления заметок --- */
+        .notes-toolbar {
+            display: flex; gap: 2px; background: #453f3c; border-radius: 6px; padding: 3px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+        }
+        .notes-toolbar button {
+            background: transparent; border: none; color: #fbf6ec; font-family: 'Georgia', serif; font-size: 15px;
+            min-width: 34px; height: 30px; padding: 0 8px; border-radius: 4px; cursor: pointer;
+        }
+        .notes-toolbar button:hover { background: rgba(251, 246, 236, 0.12); }
+        .notes-toolbar button.active { background: rgba(251, 246, 236, 0.28); }
+        .notes-toolbar.floating { position: absolute; z-index: 1600; display: none; }
+        .notes-toolbar.floating.visible { display: flex; }
+
+        /* --- Страница 2: снаряжение и заметки --- */
+        .sheet + .sheet { margin-top: 20px; }
+        /* Страница растёт вместе с заметками; при печати остаток переносится на следующие листы */
+        .sheet.page-2 { height: auto; min-height: 297mm; overflow: visible; display: flex; flex-direction: column; gap: 14px; }
+        .equip-2col { display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px; padding: 8px 12px; }
+        .equip-2col > div { display: flex; flex-direction: column; }
+        .notes-box { flex: 1; }
+        .notes-hint {
+            float: right; font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: normal;
+            letter-spacing: 0; text-transform: none; color: #8a807a;
+        }
+        .notes-editor {
+            flex: 1; outline: none; margin-top: 8px; padding: 0 12px 30px;
+            line-height: 30px; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif; font-size: 15px; color: #2c2825;
+            overflow-wrap: break-word;
+            background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 29px, #d4cdc5 29px, #d4cdc5 30px);
+        }
+        .notes-editor h3 { margin: 0; font-family: 'Georgia', serif; font-size: 18px; line-height: 30px; color: #453f3c; }
+        .notes-editor div, .notes-editor p { margin: 0; }
+        .notes-editor:empty::before { content: attr(data-placeholder); color: #a89f97; }
+        @media print {
+            .notes-toolbar, .notes-hint { display: none !important; }
+            .sheet + .sheet { margin-top: 0; }
+            .notes-editor:empty::before { content: none; }
+            /* Длинные заметки: отступы листа и рамка блока повторяются на каждой следующей странице */
+            .sheet.page-2, .notes-box { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+        }
     </style>
 </head>
 <body>
@@ -601,6 +643,12 @@
                 <input type="text" id="t2_4" class="line-input auto-resize" data-max-size="16">
                 <input type="text" id="t2_5" class="line-input auto-resize" data-max-size="16">
                 <input type="text" id="t2_6" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_7" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_8" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_9" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_10" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_11" class="line-input auto-resize" data-max-size="16">
+                <input type="text" id="t2_12" class="line-input auto-resize" data-max-size="16">
             </div>
         </div>
 
@@ -628,17 +676,48 @@
                 </div>
             </div>
         </div>
-        
-        <div class="equipment-box">
+    </div>
+
+    <!-- Страница 2: снаряжение и заметки -->
+    <div class="sheet page-2">
+        <div class="column-box">
             <div class="column-header serif-font">СНАРЯЖЕНИЕ И ПРЕДМЕТЫ</div>
-            <div class="column-content" style="padding-top: 5px;">
-                <input type="text" id="equip_1" class="line-input auto-resize" data-max-size="16">
-                <input type="text" id="equip_2" class="line-input auto-resize" data-max-size="16">
-                <input type="text" id="equip_3" class="line-input auto-resize" data-max-size="16">
-                <input type="text" id="equip_4" class="line-input auto-resize" data-max-size="16">
-                <input type="text" id="equip_5" class="line-input auto-resize" data-max-size="16">
+            <div class="equip-2col">
+                <div>
+                    <input type="text" id="equip_1" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_2" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_3" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_4" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_5" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_6" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_7" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_8" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_9" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_10" class="line-input auto-resize" data-max-size="16">
+                </div>
+                <div>
+                    <input type="text" id="equip_11" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_12" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_13" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_14" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_15" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_16" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_17" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_18" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_19" class="line-input auto-resize" data-max-size="16">
+                    <input type="text" id="equip_20" class="line-input auto-resize" data-max-size="16">
+                </div>
             </div>
         </div>
+        <div class="column-box notes-box">
+            <div class="column-header serif-font">Заметки <span class="notes-hint">Выделите текст, чтобы сделать его жирным, курсивом или заголовком</span></div>
+            <div id="notes" class="notes-editor" contenteditable="true" spellcheck="true" data-placeholder="Записи по сессиям, NPC, зацепки…"></div>
+        </div>
+    </div>
+    <div id="notes-toolbar" class="notes-toolbar floating">
+        <button type="button" data-cmd="bold" title="Жирный (Ctrl+B)"><b>Ж</b></button>
+        <button type="button" data-cmd="italic" title="Курсив (Ctrl+I)"><i>К</i></button>
+        <button type="button" data-cmd="heading" title="Заголовок">Заголовок</button>
     </div>
 
     <div class="cards-view-section">
@@ -789,6 +868,7 @@
     </script>
     <script type="module">
     import { createClient } from './lib/supabase.js'
+    import { setupNotesEditor } from './lib/notes.js'
 
     const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
@@ -991,6 +1071,7 @@
     // Раскладывает данные персонажа по полям (поле, которое сейчас редактируют, не трогаем)
     function applyCharacter(character) {
         for (const key in character) {
+            if (key === 'notes') { notesEditor.setHtml(character[key]); continue; }
             const input = document.getElementById(key);
             if (input && document.activeElement !== input) {
                 input.value = character[key] || '';
@@ -1025,24 +1106,32 @@
     }
 
     // 2. СОХРАНЕНИЕ В БАЗУ (Лист персонажа)
-    document.addEventListener('change', async (event) => {
-        const target = event.target;
-        if (target.tagName === 'INPUT') {
-            const fieldId = target.id;
-            if (fieldId && charId) {
-                pendingSaves++;
-                const { error } = await supabase.from('characters').update({ [fieldId]: target.value }).eq('id', charId);
-                pendingSaves--;
-                // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
-                if (error && error.code !== 'PGRST204') {
-                    lastRequestOk = false;
-                    showNotice('Не удалось сохранить: ' + error.message);
-                } else {
-                    lastRequestOk = true;
-                }
-                updateConnStatus();
-            }
+    async function saveField(fieldId, value) {
+        if (!fieldId || !charId) return;
+        pendingSaves++;
+        const { error } = await supabase.from('characters').update({ [fieldId]: value }).eq('id', charId);
+        pendingSaves--;
+        // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
+        if (error && error.code !== 'PGRST204') {
+            lastRequestOk = false;
+            showNotice('Не удалось сохранить: ' + error.message);
+        } else {
+            lastRequestOk = true;
         }
+        updateConnStatus();
+    }
+
+    document.addEventListener('change', (event) => {
+        const target = event.target;
+        if (target.tagName === 'INPUT') saveField(target.id, target.value);
+    });
+
+    // Заметки с форматированием (lib/notes.js)
+    const notesEditor = setupNotesEditor({
+        editor: document.getElementById('notes'),
+        toolbar: document.getElementById('notes-toolbar'),
+        floating: true,
+        onSave: (html) => saveField('notes', html)
     });
 
     // 3. REALTIME (Обновления от Мастера). Без ID персонажа подписываться не на что
