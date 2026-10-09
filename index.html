@@ -788,7 +788,7 @@
         });
     </script>
     <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm'
+    import { createClient } from './lib/supabase.js'
 
     const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
@@ -954,26 +954,74 @@
         }
     };
 
-    // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа)
-    async function loadCharacter() {
-        if (!charId) return;
-        const { data, error } = await supabase.from('characters').select('*').eq('id', charId);
-        if (error) { showNotice('Не удалось загрузить лист: ' + error.message); return; }
+    // --- СВЯЗЬ С БАЗОЙ ---
+    // Правки других (например, Мастера) приходят мгновенно через realtime-соединение.
+    // Если оно не установилось (бывает при плохой сети или блокировках), лист сам
+    // перезапрашивает данные каждые POLL_MS миллисекунд — обновления придут с задержкой, но придут.
+    const POLL_MS = 5000;
+    let realtimeOk = false;    // realtime-соединение работает
+    let lastRequestOk = null;  // последний запрос к базе прошёл (null — ещё не было)
+    let pollTimer = null;
+    let pendingSaves = 0;      // сохранения в процессе — пока они идут, опрос не перетирает поля
+    let loadInFlight = false;  // запрос уже идёт — при медленной сети не плодим новые
 
-        if (data && data.length > 0) {
-            const character = data[0];
-            for (const key in character) {
-                const input = document.getElementById(key);
-                if (input) {
-                    input.value = character[key] || '';
-                    if (typeof resizeText === 'function') resizeText(input);
-                    // Обновляем дисплей слоя, если это поле со ссылками
-                    if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
-                        window.updateInputDisplay(key);
-                    }
+    // Значок состояния связи
+    function updateConnStatus() {
+        if (!charId) return;
+        let badge = document.getElementById('conn-status');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'conn-status';
+            badge.style.cssText = 'position: fixed; left: 12px; bottom: 20px; z-index: 1500; ' +
+                'background: rgba(56, 51, 47, 0.85); color: #fbf6ec; padding: 4px 10px; border-radius: 12px; ' +
+                'font-family: sans-serif; font-size: 11px; pointer-events: none;';
+            document.body.appendChild(badge);
+            const printStyle = document.createElement('style');
+            printStyle.textContent = '@media print { #conn-status, #notice-toast { display: none !important; } }';
+            document.head.appendChild(printStyle);
+        }
+        let color, label;
+        if (lastRequestOk === false) { color = '#d46a66'; label = 'Нет связи'; }
+        else if (realtimeOk && lastRequestOk) { color = '#7fbf8e'; label = 'Связь есть'; }
+        else if (pollTimer && lastRequestOk) { color = '#e0b85a'; label = 'Обновления с задержкой'; }
+        else { color = '#e0b85a'; label = 'Загрузка…'; }
+        badge.innerHTML = `<span style="color: ${color};">●</span> ${label}`;
+    }
+
+    // Раскладывает данные персонажа по полям (поле, которое сейчас редактируют, не трогаем)
+    function applyCharacter(character) {
+        for (const key in character) {
+            const input = document.getElementById(key);
+            if (input && document.activeElement !== input) {
+                input.value = character[key] || '';
+                if (typeof resizeText === 'function') resizeText(input);
+                // Обновляем дисплей слоя, если это поле со ссылками
+                if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
+                    window.updateInputDisplay(key);
                 }
             }
         }
+    }
+
+    // 1. ЗАГРУЗКА ИЗ БАЗЫ (Лист персонажа). Возвращает ошибку или null
+    async function loadCharacter() {
+        if (!charId || loadInFlight) return null;
+        loadInFlight = true;
+        const { data, error } = await supabase.from('characters').select('*').eq('id', charId);
+        loadInFlight = false;
+        lastRequestOk = !error;
+        if (!error && data && data.length > 0 && pendingSaves === 0) applyCharacter(data[0]);
+        updateConnStatus();
+        return error;
+    }
+
+    function startPolling() {
+        if (!pollTimer) pollTimer = setInterval(loadCharacter, POLL_MS);
+    }
+
+    function stopPolling() {
+        clearInterval(pollTimer);
+        pollTimer = null;
     }
 
     // 2. СОХРАНЕНИЕ В БАЗУ (Лист персонажа)
@@ -981,35 +1029,46 @@
         const target = event.target;
         if (target.tagName === 'INPUT') {
             const fieldId = target.id;
-            const newValue = target.value;
             if (fieldId && charId) {
-                const { error } = await supabase.from('characters').update({ [fieldId]: newValue }).eq('id', charId);
+                pendingSaves++;
+                const { error } = await supabase.from('characters').update({ [fieldId]: target.value }).eq('id', charId);
+                pendingSaves--;
                 // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
-                if (error && error.code !== 'PGRST204') showNotice('Не удалось сохранить: ' + error.message);
+                if (error && error.code !== 'PGRST204') {
+                    lastRequestOk = false;
+                    showNotice('Не удалось сохранить: ' + error.message);
+                } else {
+                    lastRequestOk = true;
+                }
+                updateConnStatus();
             }
         }
     });
 
-    // 3. REALTIME (Обновления от Мастера)
-    // Без ID персонажа подписываться не на что
-    if (charId) supabase
-        .channel('any')
-        .on('postgres_changes', 
-            { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
-            (payload) => {
-                for (const key in payload.new) {
-                    const input = document.getElementById(key);
-                    if (input) {
-                        input.value = payload.new[key] || '';
-                        if (typeof resizeText === 'function') resizeText(input);
-                        if (input.classList.contains('line-input') && typeof window.updateInputDisplay === 'function') {
-                            window.updateInputDisplay(key);
-                        }
-                    }
+    // 3. REALTIME (Обновления от Мастера). Без ID персонажа подписываться не на что
+    if (charId) {
+        supabase
+            .channel('any')
+            .on('postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
+                (payload) => applyCharacter(payload.new)
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    realtimeOk = true;
+                    stopPolling();
+                    loadCharacter(); // подтягиваем то, что могли пропустить без соединения
+                } else {
+                    // CHANNEL_ERROR, TIMED_OUT, CLOSED — переходим на опрос
+                    realtimeOk = false;
+                    startPolling();
                 }
-            }
-        )
-        .subscribe();
+                updateConnStatus();
+            });
+
+        // Подстраховка: если realtime молчит дольше 10 секунд, тоже включаем опрос
+        setTimeout(() => { if (!realtimeOk) { startPolling(); updateConnStatus(); } }, 10000);
+    }
 
     // 4. ЗАГРУЗКА КАРТОЧЕК
     async function loadCards() {
@@ -1083,7 +1142,8 @@
 
     // Инициализация
     window.setupInputLinks(); // Запускаем создание слоев-дублеров
-    loadCharacter();
+    updateConnStatus();
+    loadCharacter().then(error => { if (error) showNotice('Не удалось загрузить лист: ' + error.message); });
     loadCards();
     </script>
 </body>
