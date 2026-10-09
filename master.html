@@ -134,6 +134,8 @@
         .desc-toolbar button { background: #4a443f; color: #fbf6ec; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-family: 'Georgia', serif; font-size: 14px; }
         .desc-toolbar button:hover { background: #5c544e; }
         #input_description { min-height: 150px; }
+        /* Тип и тэги на карточке заглавные — в полях тоже */
+        #input_label, #input_footer { text-transform: uppercase; }
         .owner-pick { display: flex; flex-wrap: wrap; gap: 6px; }
         .owner-toggle { background: #2b2b2b; border: 1px solid #635a55; color: #dcd3cb; border-radius: 16px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
         .owner-toggle small { color: #8a807a; margin-left: 5px; }
@@ -161,7 +163,7 @@
         /* Подсказки из существующих значений */
         .suggest {
             position: absolute; z-index: 3000; background: #2b2b2b; border: 1px solid #635a55; border-radius: 6px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5); max-height: 260px; overflow-y: auto; display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5); max-height: 300px; overflow-y: auto; display: none;
         }
         .suggest.open { display: block; }
         .suggest-item { padding: 6px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; font-size: 13px; }
@@ -459,8 +461,24 @@
             return CONTENT_FIELDS.map(f => {
                 let v = c[f] == null ? '' : String(c[f]);
                 if (f === 'theme') v = v.trim();
+                if (f === 'card_label') v = normLabel(v);
+                if (f === 'card_footer_tags') v = normTags(v);
                 return v;
             }).join('\u0001');
+        }
+
+        // Тип и тэги на карточке всегда показываются заглавными — так же их и храним,
+        // чтобы «Оружие», «оружие» и «ОРУЖИЕ» считались одним значением
+        function normLabel(v) {
+            return String(v == null ? '' : v).trim().toUpperCase();
+        }
+
+        function normTags(v) {
+            const seen = new Set();
+            return String(v == null ? '' : v).split(',')
+                .map(t => t.trim().toUpperCase())
+                .filter(t => t && !seen.has(t) && seen.add(t))
+                .join(', ');
         }
 
         // ===================== КАРТОЧКИ: библиотека и редактор =====================
@@ -544,11 +562,11 @@
         function readFormContent() {
             return {
                 theme: currentTheme,
-                card_label: $('input_label').value,
+                card_label: normLabel($('input_label').value),
                 card_title: $('input_title').value,
                 card_tag: $('input_tag').value,
                 card_description: $('input_description').value,
-                card_footer_tags: $('input_footer').value.replace(/[,\s]+$/, '')
+                card_footer_tags: normTags($('input_footer').value)
             };
         }
 
@@ -869,15 +887,16 @@
         let suggestFor = null, suggestItems = [], suggestActive = -1;
 
         // Все значения поля из существующих карточек, самые частые — первыми.
-        // Тэги разбираются по запятым, регистр не важен
+        // Тэги разбираются по запятым, регистр не важен; тип и тэги показываем заглавными, как на карточке
         function suggestValues(field) {
+            const upper = field === 'card_label' || field === 'card_footer_tags';
             const counts = new Map();
             for (const c of allCards) {
                 const raw = c[field];
                 if (!raw) continue;
                 const parts = field === 'card_footer_tags' ? String(raw).split(',') : [String(raw)];
                 for (const part of parts) {
-                    const v = part.trim();
+                    const v = upper ? part.trim().toUpperCase() : part.trim();
                     if (!v) continue;
                     const key = v.toLowerCase();
                     const entry = counts.get(key) || { v, n: 0 };
@@ -925,7 +944,6 @@
                     items = items.filter(x => x.v.toLowerCase().includes(token));
                     items.sort((a, b) => b.v.toLowerCase().startsWith(token) - a.v.toLowerCase().startsWith(token));
                 }
-                items = items.slice(0, 8);
                 suggestFor = { input, multi, onPick };
                 suggestItems = items;
                 suggestActive = -1;
