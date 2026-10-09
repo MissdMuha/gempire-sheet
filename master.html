@@ -238,7 +238,7 @@
     </div>
 
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm'
 
         const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
@@ -274,9 +274,15 @@
             }
         };
 
+        // Экранирует одиночный "<", который не начинает тег (например «урон <5»). Теги вроде <b> работают как раньше
+        function fixText(text) {
+            return String(text == null ? '' : text).replace(/<(?![a-zA-Z\/!])/g, '&lt;');
+        }
+
         window.parseCardLinks = function(text) {
             if (!text) return '';
-            return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link">$1</span>');
+            return fixText(text).replace(/\[\[(.*?)\]\]/g, (match, title) =>
+                `<span class="card-link">${title}</span>`);
         }
 
         // Экранирование для безопасной вставки в HTML-атрибуты/текст

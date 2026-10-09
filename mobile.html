@@ -689,7 +689,7 @@
     </script>
 
     <script type="module">
-        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/+esm'
 
         const supabaseUrl = 'https://fzfijdsjgxoympldpwyq.supabase.co'; 
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6ZmlqZHNqZ3hveW1wbGRwd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNDY2NzAsImV4cCI6MjA5NDcyMjY3MH0.iAADzjFKSLEr1DHdQPq3j4Ji6tdh-NZhrTfIsvdxUgA'; 
@@ -700,10 +700,38 @@
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
 
+        // Экранирует одиночный "<", который не начинает тег (например «урон <5»). Теги вроде <b> работают как раньше
+        function fixText(text) {
+            return String(text == null ? '' : text).replace(/<(?![a-zA-Z\/!])/g, '&lt;');
+        }
+
+        // Значение для HTML-атрибута в двойных кавычках
+        function attrText(text) {
+            return String(text).replace(/&lt;/g, '<').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        }
+
+        // Всплывающее сообщение об ошибке (например, пропал интернет и правка не сохранилась)
+        function showNotice(text) {
+            let box = document.getElementById('notice-toast');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'notice-toast';
+                box.style.cssText = 'position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: 90vw; ' +
+                    'background: #8b3a3a; color: #fbf6ec; padding: 10px 16px; border-radius: 6px; font-family: sans-serif; ' +
+                    'font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 3000;';
+                document.body.appendChild(box);
+            }
+            box.textContent = text;
+            box.style.display = 'block';
+            clearTimeout(box.hideTimer);
+            box.hideTimer = setTimeout(() => { box.style.display = 'none'; }, 6000);
+        }
+
         // Обработка гиперссылок [[Название]]
         window.parseCardLinks = function(text) {
             if (!text) return '';
-            return text.replace(/\[\[(.*?)\]\]/g, '<span class="card-link" onclick="openCardModal(\'$1\')">$1</span>');
+            return fixText(text).replace(/\[\[(.*?)\]\]/g, (match, title) =>
+                `<span class="card-link" data-title="${attrText(title)}" onclick="openCardModal(this.dataset.title)">${title}</span>`);
         }
 
         // --- МАГИЯ ДЛЯ ПОЛЕЙ СО ССЫЛКАМИ ---
@@ -782,7 +810,7 @@
             const { data, error } = await supabase.from('cards').select('*').ilike('card_title', title).limit(1);
 
             if (error || !data || data.length === 0) {
-                container.innerHTML = `<div style="background: #fbf6ec; padding: 20px; border-radius: 8px; color: #453f3c; font-family: sans-serif;">Карточка <b>«${title}»</b> не найдена в базе.</div>`;
+                container.innerHTML = `<div style="background: #fbf6ec; padding: 20px; border-radius: 8px; color: #453f3c; font-family: sans-serif;">Карточка <b>«${fixText(title)}»</b> не найдена в базе.</div>`;
                 return;
             }
 
@@ -794,17 +822,17 @@
                     <div class="card-frame">
                         <div class="card-header">
                             <div class="card-title-box">
-                                <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                                <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
+                                <div class="card-label-display">${fixText(card.card_label || 'НАВЫК')}</div>
+                                <div class="card-title-display auto-resize-line" data-max-size="15">${fixText(card.card_title || 'Без названия')}</div>
                             </div>
-                            <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                            <div class="card-tag-box"><div class="card-tag-display">${fixText(card.card_tag || '')}</div></div>
                         </div>
                         <div class="card-body ${safeTheme}">
                             <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                         </div>
                         <div class="card-footer">
                             <div class="footer-label">ТЭГИ</div>
-                            <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
+                            <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${fixText(card.card_footer_tags || '')}</div>
                         </div>
                     </div>
                 </div>
@@ -896,7 +924,8 @@
 
         async function loadCharacter() {
             if (!charId) return;
-            const { data } = await supabase.from('characters').select('*').eq('id', charId);
+            const { data, error } = await supabase.from('characters').select('*').eq('id', charId);
+            if (error) { showNotice('Не удалось загрузить лист: ' + error.message); return; }
             if (data && data.length > 0) {
                 for (const key in data[0]) {
                     const input = document.getElementById(key);
@@ -915,12 +944,15 @@
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 const fieldId = e.target.id;
                 if (fieldId && charId) {
-                    await supabase.from('characters').update({ [fieldId]: e.target.value }).eq('id', charId);
+                    const { error } = await supabase.from('characters').update({ [fieldId]: e.target.value }).eq('id', charId);
+                    // PGRST204 — такого столбца нет в таблице (поле не хранится в базе), это не ошибка
+                    if (error && error.code !== 'PGRST204') showNotice('Не удалось сохранить: ' + error.message);
                 }
             }
         });
 
-        supabase.channel('any').on('postgres_changes', 
+        // Без ID персонажа подписываться не на что
+        if (charId) supabase.channel('any').on('postgres_changes', 
             { event: 'UPDATE', schema: 'public', table: 'characters', filter: `id=eq.${charId}` },
             (payload) => {
                 for (const key in payload.new) {
@@ -954,17 +986,17 @@
                         <div class="card-frame">
                             <div class="card-header">
                                 <div class="card-title-box">
-                                    <div class="card-label-display">${card.card_label || 'НАВЫК'}</div>
-                                    <div class="card-title-display auto-resize-line" data-max-size="15">${card.card_title || 'Без названия'}</div>
+                                    <div class="card-label-display">${fixText(card.card_label || 'НАВЫК')}</div>
+                                    <div class="card-title-display auto-resize-line" data-max-size="15">${fixText(card.card_title || 'Без названия')}</div>
                                 </div>
-                                <div class="card-tag-box"><div class="card-tag-display">${card.card_tag || ''}</div></div>
+                                <div class="card-tag-box"><div class="card-tag-display">${fixText(card.card_tag || '')}</div></div>
                             </div>
                             <div class="card-body ${safeTheme}">
                                 <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(card.card_description || '')}</div>
                             </div>
                             <div class="card-footer">
                                 <div class="footer-label">ТЭГИ</div>
-                                <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${card.card_footer_tags || ''}</div>
+                                <div class="card-footer-tags-display auto-resize-line" data-max-size="11">${fixText(card.card_footer_tags || '')}</div>
                             </div>
                         </div>
                     </div>`;
