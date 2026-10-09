@@ -117,6 +117,19 @@
         .lib-meta { font-size: 11px; color: #a89f97; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .lib-desc { font-size: 12px; color: #cfc6bd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .lib-owners { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+        .library-hint { font-size: 11px; color: #8a807a; margin-top: -6px; }
+        .lib-row.pinned { outline: 1px dashed #a5c6df; }
+        .lib-peek {
+            align-self: flex-start; margin: 6px 6px 0 0; background: transparent; border: 1px solid #635a55; color: #dcd3cb;
+            border-radius: 4px; padding: 2px 6px; cursor: pointer; font-size: 13px; flex-shrink: 0;
+        }
+        .lib-peek:hover, .lib-row.pinned .lib-peek { background: #a5c6df; border-color: #a5c6df; color: #2b2b2b; }
+        .compare { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; padding-top: 10px; border-top: 1px dashed #635a55; }
+        .compare-head { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+        .compare-head label { color: #a5c6df; }
+        .compare-head button { background: transparent; border: none; color: #dcd3cb; font-size: 20px; cursor: pointer; line-height: 1; }
+        .compare-owners { font-size: 11px; color: #a89f97; text-align: center; }
+        .preview-col .card-link { cursor: pointer; }
         .owner-mini { font-size: 11px; background: #4a4440; border-radius: 4px; padding: 1px 6px; color: #dcd3cb; }
         .owner-mini.pool { background: #5a5236; color: #f0e2b0; }
 
@@ -134,6 +147,8 @@
         .desc-toolbar button { background: #4a443f; color: #fbf6ec; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-family: 'Georgia', serif; font-size: 14px; }
         .desc-toolbar button:hover { background: #5c544e; }
         #input_description { min-height: 150px; }
+        /* Тип и тэги на карточке заглавные — в полях тоже */
+        #input_label, #input_footer { text-transform: uppercase; }
         .owner-pick { display: flex; flex-wrap: wrap; gap: 6px; }
         .owner-toggle { background: #2b2b2b; border: 1px solid #635a55; color: #dcd3cb; border-radius: 16px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
         .owner-toggle small { color: #8a807a; margin-left: 5px; }
@@ -161,7 +176,7 @@
         /* Подсказки из существующих значений */
         .suggest {
             position: absolute; z-index: 3000; background: #2b2b2b; border: 1px solid #635a55; border-radius: 6px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5); max-height: 260px; overflow-y: auto; display: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5); max-height: 300px; overflow-y: auto; display: none;
         }
         .suggest.open { display: block; }
         .suggest-item { padding: 6px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; font-size: 13px; }
@@ -299,6 +314,7 @@
                     <button type="button" data-theme="method-theme"><i class="dot method-dot"></i>Метод</button>
                 </div>
                 <div class="library-count" id="lib-count"></div>
+                <div class="library-hint">Наведите на карточку — она появится рядом с редактором. 👁 — закрепить для сравнения, клик — редактировать.</div>
                 <div class="library-list" id="library-list"></div>
             </section>
 
@@ -343,7 +359,7 @@
                         </div>
                         <div class="form-group">
                             <label>Тэги в подвале</label>
-                            <input type="text" id="input_footer" placeholder="Оружие, Контакт, Сила">
+                            <input type="text" id="input_footer" placeholder="[Оружие] [Контакт] [Сила]">
                         </div>
                         <div class="form-group">
                             <label>Кому выдать</label>
@@ -384,6 +400,16 @@
                         </div>
                         <div class="fit-warning" id="fit-warning"></div>
                         <div class="hint">Ctrl+Enter — выдать / сохранить</div>
+
+                        <!-- Другая карточка из библиотеки: при наведении или закреплённая кнопкой 👁 -->
+                        <div class="compare" id="compare" style="display: none;">
+                            <div class="compare-head">
+                                <label id="compare-label">Для сравнения</label>
+                                <button type="button" id="compare-close" title="Убрать">&times;</button>
+                            </div>
+                            <div id="compare-card"></div>
+                            <div class="compare-owners" id="compare-owners"></div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -459,8 +485,34 @@
             return CONTENT_FIELDS.map(f => {
                 let v = c[f] == null ? '' : String(c[f]);
                 if (f === 'theme') v = v.trim();
+                if (f === 'card_label') v = normLabel(v);
+                if (f === 'card_footer_tags') v = normTags(v);
                 return v;
             }).join('\u0001');
+        }
+
+        // Тип и тэги на карточке всегда показываются заглавными — так же их и храним,
+        // чтобы «Оружие», «оружие» и «ОРУЖИЕ» считались одним значением
+        function normLabel(v) {
+            return String(v == null ? '' : v).trim().toUpperCase();
+        }
+
+        // Тэги записываются в квадратных скобках: [Оружие] [Ближний бой] — пробел внутри скобок
+        // часть тэга. Текст вне скобок (старые карточки «Оружие, Контакт») разбираем по запятым
+        function parseTags(v) {
+            const tags = [];
+            const rest = String(v == null ? '' : v).replace(/\[([^\]]*)\]/g, (m, t) => { tags.push(t); return ','; });
+            rest.split(',').forEach(t => tags.push(t));
+            return tags.map(t => t.replace(/[\[\]]/g, '').trim()).filter(Boolean);
+        }
+
+        function normTags(v) {
+            const seen = new Set();
+            return parseTags(v)
+                .map(t => t.toUpperCase())
+                .filter(t => !seen.has(t) && seen.add(t))
+                .map(t => `[${t}]`)
+                .join(' ');
         }
 
         // ===================== КАРТОЧКИ: библиотека и редактор =====================
@@ -476,6 +528,7 @@
         let selectedOwners = new Set();   // кому выдать / у кого оставить (owner_id)
         let currentTheme = 'flesh-theme';
         let dirty = false;                // в редакторе есть несохранённые правки
+        let pinnedSig = null;             // карточка, закреплённая для сравнения (по подписи содержимого)
         const libFilter = { q: '', theme: '', owner: '' };
 
         const $ = (id) => document.getElementById(id);
@@ -513,7 +566,7 @@
             const descBox = $('prev_desc');
             descBox.innerHTML = window.parseCardLinks($('input_description').value);
             const footerEl = $('prev_footer');
-            footerEl.innerText = $('input_footer').value.replace(/[,\s]+$/, '');
+            footerEl.innerText = normTags($('input_footer').value);
             $('prev_theme').className = `card-body ${currentTheme}`;
             window.resizeCardText(descBox);
             window.resizeTagsText(footerEl);
@@ -544,11 +597,11 @@
         function readFormContent() {
             return {
                 theme: currentTheme,
-                card_label: $('input_label').value,
+                card_label: normLabel($('input_label').value),
                 card_title: $('input_title').value,
                 card_tag: $('input_tag').value,
                 card_description: $('input_description').value,
-                card_footer_tags: $('input_footer').value.replace(/[,\s]+$/, '')
+                card_footer_tags: normTags($('input_footer').value)
             };
         }
 
@@ -712,8 +765,9 @@
                     `<span class="owner-mini${isPool(o.owner_id) ? ' pool' : ''}">${esc(ownerName(o.owner_id))}</span>`).join('');
                 const meta = [g.card_label, g.card_footer_tags].filter(Boolean).map(esc).join(' · ');
                 const desc = plain(g.card_description);
+                const pinned = g.sig === pinnedSig ? ' pinned' : '';
                 return `
-                    <div class="lib-row${active}" data-group="${groups.indexOf(g)}">
+                    <div class="lib-row${active}${pinned}" data-group="${groups.indexOf(g)}">
                         <div class="lib-stripe ${esc(theme)}"></div>
                         <div class="lib-main">
                             <div class="lib-title">${esc(g.card_title || 'Без названия')}${g.card_tag ? `<span class="lib-tag">${esc(g.card_tag)}</span>` : ''}</div>
@@ -721,6 +775,7 @@
                             ${desc ? `<div class="lib-desc">${esc(desc)}</div>` : ''}
                             <div class="lib-owners">${owners}</div>
                         </div>
+                        <button type="button" class="lib-peek" data-action="peek" title="Закрепить рядом с редактором для сравнения">👁</button>
                     </div>`;
             }).join('') : `<p class="lib-empty">${groups.length ? 'Ничего не нашлось.' : 'Пока ни одной карточки.'}</p>`;
         }
@@ -730,6 +785,52 @@
             renderOwnerFilter();
             renderOwnerPick();
             renderLibrary();
+            showCompare();
+        }
+
+        // --- Просмотр другой карточки рядом с редактором ---
+        function cardHtml(g) {
+            return `
+                <div class="card">
+                    <div class="card-frame">
+                        <div class="card-header">
+                            <div class="card-title-box">
+                                <div class="card-label-display">${esc(g.card_label || 'НАВЫК')}</div>
+                                <div class="card-title-display">${esc(g.card_title || 'Без названия')}</div>
+                            </div>
+                            <div class="card-tag-box"><div class="card-tag-display">${esc(g.card_tag || '')}</div></div>
+                        </div>
+                        <div class="card-body ${esc((g.theme || '').trim())}">
+                            <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(g.card_description || '')}</div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="footer-label">ТЭГИ</div>
+                            <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${esc(g.card_footer_tags || '')}</div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+        // Показывает карточку g (при наведении), а без аргумента — закреплённую, если она есть
+        function showCompare(g) {
+            const pinned = groups.find(x => x.sig === pinnedSig) || null;
+            if (pinnedSig && !pinned) pinnedSig = null; // закреплённую удалили или изменили
+            const shown = g || pinned;
+            const box = $('compare');
+            if (!shown) { box.style.display = 'none'; return; }
+            box.style.display = '';
+            $('compare-label').textContent = shown === pinned ? 'Для сравнения' : 'Просмотр';
+            $('compare-close').style.visibility = shown === pinned ? '' : 'hidden';
+            $('compare-card').innerHTML = cardHtml(shown);
+            $('compare-owners').textContent = 'Есть у: ' + shown.owners.map(o => ownerName(o.owner_id)).join(', ');
+            $('compare-card').querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
+            $('compare-card').querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
+        }
+
+        function pinCompare(g) {
+            pinnedSig = g && g.sig !== pinnedSig ? g.sig : null;
+            renderLibrary();
+            showCompare();
         }
 
         // --- Сохранение ---
@@ -869,15 +970,16 @@
         let suggestFor = null, suggestItems = [], suggestActive = -1;
 
         // Все значения поля из существующих карточек, самые частые — первыми.
-        // Тэги разбираются по запятым, регистр не важен
+        // Тэги разбираются по запятым, регистр не важен; тип и тэги показываем заглавными, как на карточке
         function suggestValues(field) {
+            const upper = field === 'card_label' || field === 'card_footer_tags';
             const counts = new Map();
             for (const c of allCards) {
                 const raw = c[field];
                 if (!raw) continue;
-                const parts = field === 'card_footer_tags' ? String(raw).split(',') : [String(raw)];
+                const parts = field === 'card_footer_tags' ? parseTags(raw) : [String(raw)];
                 for (const part of parts) {
-                    const v = part.trim();
+                    const v = upper ? part.trim().toUpperCase() : part.trim();
                     if (!v) continue;
                     const key = v.toLowerCase();
                     const entry = counts.get(key) || { v, n: 0 };
@@ -899,13 +1001,17 @@
             if (active) active.scrollIntoView({ block: 'nearest' });
         }
 
+        function tagTokenStart(value) {
+            return Math.max(value.lastIndexOf(']'), value.lastIndexOf(',')) + 1;
+        }
+
         function pickSuggest(i) {
             const { input, multi, onPick } = suggestFor;
             const v = suggestItems[i].v;
             if (onPick) { hideSuggest(); onPick(v); return; }
             if (multi) {
-                const cut = input.value.lastIndexOf(',');
-                input.value = (cut >= 0 ? input.value.slice(0, cut + 1) + ' ' : '') + v + ', ';
+                const before = input.value.slice(0, tagTokenStart(input.value)).trim();
+                input.value = (before ? before + ' ' : '') + `[${v}] `;
             } else {
                 input.value = v;
             }
@@ -917,21 +1023,21 @@
             // При фокусе показываем все варианты, при наборе — только подходящие
             const show = (e) => {
                 const value = input.value;
-                const typed = (multi ? value.slice(value.lastIndexOf(',') + 1) : value).trim().toLowerCase();
+                const start = multi ? tagTokenStart(value) : 0;
+                const typed = value.slice(start).replace(/^[\s\[]+/, '').trim().toLowerCase();
                 const token = e && e.type === 'focus' && !multi ? '' : typed;
-                const used = multi ? new Set(value.split(',').slice(0, -1).map(x => x.trim().toLowerCase())) : new Set();
+                const used = multi ? new Set(parseTags(value.slice(0, start)).map(x => x.toLowerCase())) : new Set();
                 let items = suggestValues(field).filter(x => !used.has(x.v.toLowerCase()) && x.v.toLowerCase() !== typed);
                 if (token) {
                     items = items.filter(x => x.v.toLowerCase().includes(token));
                     items.sort((a, b) => b.v.toLowerCase().startsWith(token) - a.v.toLowerCase().startsWith(token));
                 }
-                items = items.slice(0, 8);
                 suggestFor = { input, multi, onPick };
                 suggestItems = items;
                 suggestActive = -1;
                 if (!items.length) { suggestBox.classList.remove('open'); return; }
                 suggestBox.innerHTML = items.map((x, i) =>
-                    `<div class="suggest-item" data-i="${i}"><span>${esc(x.v)}</span><small>${x.n}</small></div>`).join('');
+                    `<div class="suggest-item" data-i="${i}"><span>${esc(multi ? `[${x.v}]` : x.v)}</span><small>${x.n}</small></div>`).join('');
                 const r = input.getBoundingClientRect();
                 suggestBox.style.left = (r.left + window.scrollX) + 'px';
                 suggestBox.style.top = (r.bottom + 2 + window.scrollY) + 'px';
@@ -1033,7 +1139,31 @@
             const row = e.target.closest('.lib-row');
             if (!row) return;
             const g = groups[+row.dataset.group];
-            if (g && confirmDiscard()) editGroup(g);
+            if (!g) return;
+            if (e.target.closest('[data-action="peek"]')) pinCompare(g);
+            else if (confirmDiscard()) editGroup(g);
+        });
+        // Наведение на карточку в библиотеке показывает её целиком рядом с редактором
+        let hoverTimer = null;
+        $('library-list').addEventListener('mouseover', (e) => {
+            const row = e.target.closest('.lib-row');
+            if (!row) return;
+            clearTimeout(hoverTimer);
+            hoverTimer = setTimeout(() => showCompare(groups[+row.dataset.group]), 120);
+        });
+        $('library-list').addEventListener('mouseleave', () => {
+            clearTimeout(hoverTimer);
+            showCompare();
+        });
+        $('compare-close').addEventListener('click', () => pinCompare(null));
+        // Клик по ссылке [[…]] в превью открывает ту карточку для сравнения
+        document.querySelector('.preview-col').addEventListener('click', (e) => {
+            const link = e.target.closest('.card-link');
+            if (!link) return;
+            const title = link.textContent.trim().toLowerCase();
+            const g = groups.find(x => String(x.card_title || '').trim().toLowerCase() === title);
+            if (g) { pinnedSig = null; pinCompare(g); }
+            else setStatus(`Карточка «${link.textContent}» не найдена.`, false);
         });
         $('lib-search').addEventListener('input', (e) => { libFilter.q = e.target.value; renderLibrary(); });
         $('lib-owner').addEventListener('change', (e) => { libFilter.owner = e.target.value; renderLibrary(); });
