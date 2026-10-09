@@ -158,12 +158,115 @@
         .btn-delete:hover { background-color: #c78b98; }
 
         .card-link { color: #4a76a8; text-decoration: underline; text-decoration-style: dashed; font-weight: bold; }
+
+        /* --- Вкладки пульта --- */
+        .master-tabs { display: flex; gap: 8px; margin: -6px 0 24px; }
+        .master-tab {
+            background: #38332f; color: #dcd3cb; border: 1px solid #635a55; padding: 9px 18px;
+            border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer;
+        }
+        .master-tab:hover { background: #4a443f; }
+        .master-tab.active { background: #c8b88f; color: #2b2b2b; border-color: #c8b88f; }
+        .master-view { display: none; width: 100%; flex-direction: column; align-items: center; }
+        .master-view.active { display: flex; }
+
+        /* --- Глаз бога: все персонажи --- */
+        .players-toolbar { width: 100%; max-width: 1100px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+        .players-toolbar input { flex: 1; min-width: 200px; }
+        .players-info { font-size: 13px; color: #dcd3cb; display: flex; gap: 16px; flex-wrap: wrap; }
+        .players-grid { width: 100%; max-width: 1100px; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+        .players-empty { color: #8a807a; grid-column: 1 / -1; text-align: center; }
+        .player-tile {
+            background: #38332f; border-radius: 10px; padding: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 10px; border: 1px solid transparent;
+        }
+        /* Подсветка, когда в листе что-то поменялось */
+        .player-tile.flash { animation: tile-flash 1.6s ease-out; }
+        @keyframes tile-flash {
+            from { border-color: #c8b88f; box-shadow: 0 0 0 3px rgba(200, 184, 143, 0.45); }
+            to { border-color: transparent; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        }
+        .player-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .player-name { font-family: 'Georgia', serif; font-size: 20px; font-weight: bold; color: #fbf6ec; overflow-wrap: anywhere; }
+        .player-id { font-size: 11px; color: #a89f97; letter-spacing: 0.5px; font-weight: normal; font-family: 'Segoe UI', sans-serif; }
+        .player-armor { background: #4a4440; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; white-space: nowrap; }
+        .meter-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #dcd3cb; margin-bottom: 4px; }
+        .meter-top b { font-size: 14px; color: #fbf6ec; letter-spacing: 0; }
+        .meter-bar { height: 6px; background: #4a4440; border-radius: 3px; overflow: hidden; }
+        .meter-bar i { display: block; height: 100%; border-radius: 3px; transition: width 0.4s; }
+        .player-stats { display: flex; gap: 6px; }
+        .player-stats .stat {
+            flex: 1; text-align: center; border-radius: 6px; padding: 5px 2px; font-size: 10px; text-transform: uppercase;
+            letter-spacing: 0.5px; color: #453f3c; font-weight: bold;
+        }
+        .player-stats .stat b { display: block; font-size: 17px; font-family: 'Georgia', serif; letter-spacing: 0; }
+        .stat.flesh { background: #f7e6ea; } .stat.will { background: #efe3fa; } .stat.method { background: #e3f0fa; }
+        .player-foot { font-size: 12px; color: #a89f97; }
+        .player-actions { display: flex; gap: 6px; }
+        .player-actions .btn-edit { flex: 1; }
+        .btn-link { background: #635a55; color: #fbf6ec; border: none; border-radius: 4px; padding: 0 12px; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        .btn-link:hover { background: #7a706a; }
+
+        /* --- Лист игрока поверх пульта --- */
+        .sheet-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); z-index: 2500; display: none; padding: 16px; }
+        .sheet-overlay.active { display: flex; justify-content: center; }
+        .sheet-panel {
+            width: min(1120px, 100%); height: 100%; background: #2b2b2b; border-radius: 10px;
+            display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .sheet-panel-bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #38332f; border-bottom: 1px solid #635a55; flex-wrap: wrap; }
+        .sheet-panel-title { flex: 1; min-width: 0; font-family: 'Georgia', serif; font-size: 18px; font-weight: bold; }
+        .sheet-mode { display: flex; background: #2b2b2b; border-radius: 6px; padding: 2px; }
+        .sheet-mode button { background: transparent; border: none; color: #dcd3cb; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .sheet-mode button.active { background: #635a55; color: #fbf6ec; }
+        .sheet-newtab { color: #a5c6df; font-size: 13px; text-decoration: none; }
+        .sheet-newtab:hover { text-decoration: underline; }
+        .sheet-close { background: transparent; border: none; color: #fbf6ec; font-size: 28px; cursor: pointer; line-height: 1; padding: 0 4px; }
+        .sheet-frame-wrap { flex: 1; display: flex; justify-content: center; min-height: 0; }
+        .sheet-frame-wrap iframe { border: none; width: 100%; height: 100%; background: #2b2b2b; }
+        .sheet-frame-wrap.mobile iframe { width: 400px; max-width: 100%; border-left: 1px solid #635a55; border-right: 1px solid #635a55; }
     </style>
 </head>
 <body>
 
-    <h1>Мастер-Пульт: Выдача карточек</h1>
+    <h1>Мастер-Пульт</h1>
 
+    <div class="master-tabs">
+        <button class="master-tab" data-view="players">👁 Глаз бога</button>
+        <button class="master-tab" data-view="cards">🃏 Карточки</button>
+    </div>
+
+    <!-- Глаз бога: листы всех персонажей -->
+    <div id="view-players" class="master-view">
+        <div class="players-toolbar">
+            <input type="search" id="players-search" placeholder="Поиск по имени или ID…">
+            <div class="players-info">
+                <span>Персонажей: <b id="players-count">0</b></span>
+                <span id="players-status"></span>
+            </div>
+        </div>
+        <div class="players-grid" id="players-grid"></div>
+    </div>
+
+    <div id="sheet-overlay" class="sheet-overlay">
+        <div class="sheet-panel">
+            <div class="sheet-panel-bar">
+                <div class="sheet-panel-title"><span id="sheet-panel-name"></span> <span class="player-id" id="sheet-panel-id"></span></div>
+                <div class="sheet-mode">
+                    <button type="button" data-mode="pc">ПК-лист</button>
+                    <button type="button" data-mode="mobile">Телефон</button>
+                </div>
+                <a class="sheet-newtab" id="sheet-panel-newtab" target="_blank" rel="noopener">Открыть в новой вкладке ↗</a>
+                <button type="button" class="sheet-close" onclick="closePlayerSheet()" title="Закрыть (Esc)">&times;</button>
+            </div>
+            <div class="sheet-frame-wrap" id="sheet-frame-wrap"><iframe id="sheet-frame" title="Лист персонажа"></iframe></div>
+        </div>
+    </div>
+
+    <!-- Подсказка ID игроков в полях «кому выдать» -->
+    <datalist id="player-ids"></datalist>
+
+    <div id="view-cards" class="master-view">
     <div class="admin-container">
         <form class="form-section" id="add-card-form">
             <div class="edit-banner" id="edit-banner">
@@ -173,7 +276,7 @@
 
             <div class="form-group" id="owner-field-group">
                 <label>ID Игрока (Кому выдать)</label>
-                <input type="text" id="input_owner_id" placeholder="Например: 1, 404-elf">
+                <input type="text" id="input_owner_id" list="player-ids" placeholder="Например: 1, 404-elf">
             </div>
             <div class="form-group">
                 <label>Тема (Цвет)</label>
@@ -235,6 +338,7 @@
         <h1>Выданные карточки в игре</h1>
         <div class="cards-grid" id="existing-cards-grid">
             </div>
+    </div>
     </div>
 
     <script type="module">
@@ -365,6 +469,11 @@
         // Загрузка и группировка карточек
         async function fetchCards() {
             const { data: cards, error } = await supabase.from('cards').select('*').order('owner_id');
+            if (!error) {
+                cardCounts = new Map();
+                (cards || []).forEach(c => cardCounts.set(String(c.owner_id), (cardCounts.get(String(c.owner_id)) || 0) + 1));
+                renderPlayers();
+            }
             const grid = document.getElementById('existing-cards-grid');
             grid.innerHTML = '';
 
@@ -416,7 +525,7 @@
                             </div>
                             <div class="owners-row">${chips}</div>
                             <div class="add-owner-row">
-                                <input type="text" id="add-owner-input-${index}" placeholder="ID игрока…">
+                                <input type="text" id="add-owner-input-${index}" list="player-ids" placeholder="ID игрока…">
                                 <button onclick="addOwnerToGroup(${index})">+ Выдать</button>
                             </div>
                         </div>
@@ -586,7 +695,243 @@
             }
         });
 
+
+        // ===================== ГЛАЗ БОГА: листы всех персонажей =====================
+        const POLL_MS = 5000;
+        let players = [];               // строки таблицы characters
+        let cardCounts = new Map();     // owner_id → сколько у игрока карточек
+        let playersRealtimeOk = false;
+        let playersPollTimer = null;
+        let playersLastOk = null;
+        let openedPlayerId = null;
+        let sheetMode = window.innerWidth < 900 ? 'mobile' : 'pc';
+
+        const val = (v) => (v == null || v === '') ? '—' : esc(v);
+        const num = (v) => { const n = parseFloat(String(v ?? '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+
+        function sheetUrl(id, mode) {
+            const page = mode === 'mobile' ? 'mobile.html' : 'index.html';
+            return new URL(`${page}?id=${encodeURIComponent(id)}`, location.href).href;
+        }
+
+        function meter(label, cur, max, color) {
+            const c = num(cur), m = num(max);
+            const pct = c !== null && m ? Math.max(0, Math.min(100, c / m * 100)) : null;
+            return `
+                <div>
+                    <div class="meter-top"><span>${label}</span><b>${val(cur)} / ${val(max)}</b></div>
+                    <div class="meter-bar">${pct === null ? '' : `<i style="width: ${pct}%; background: ${color};"></i>`}</div>
+                </div>`;
+        }
+
+        function playerTile(p) {
+            const id = String(p.id);
+            return `
+                <div class="player-tile" data-id="${esc(id)}">
+                    <div class="player-head">
+                        <div>
+                            <div class="player-name">${p.char_name ? esc(p.char_name) : 'Без имени'}</div>
+                            <div class="player-id">ID: ${esc(id)}</div>
+                        </div>
+                        <div class="player-armor" title="Броня">🛡 ${val(p.armor)}</div>
+                    </div>
+                    ${meter('ХП', p.hp_current, p.hp_max, '#c97b84')}
+                    ${meter('Очки воли', p.willpower_current, p.willpower_max, '#9a86c4')}
+                    <div class="player-stats">
+                        <span class="stat flesh">Плоть<b>${val(p.stat_flesh)}</b></span>
+                        <span class="stat will">Воля<b>${val(p.stat_will)}</b></span>
+                        <span class="stat method">Метод<b>${val(p.stat_method)}</b></span>
+                    </div>
+                    <div class="player-foot">Карточек: ${cardCounts.get(id) || 0}</div>
+                    <div class="player-actions">
+                        <button class="btn-edit" data-action="open">👁 Открыть лист</button>
+                        <button class="btn-link" data-action="copy" title="Скопировать ссылку на лист для игрока">🔗 Ссылка</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderPlayers() {
+            const grid = document.getElementById('players-grid');
+            const q = document.getElementById('players-search').value.trim().toLowerCase();
+            const list = players
+                .filter(p => !q || String(p.char_name || '').toLowerCase().includes(q) || String(p.id).toLowerCase().includes(q))
+                .sort((a, b) => String(a.char_name || a.id).localeCompare(String(b.char_name || b.id), 'ru', { numeric: true }));
+            grid.innerHTML = list.length
+                ? list.map(playerTile).join('')
+                : `<p class="players-empty">${players.length ? 'Никого не нашлось.' : 'Пока нет ни одного персонажа.'}</p>`;
+            document.getElementById('players-count').textContent = players.length;
+            document.getElementById('player-ids').innerHTML = players
+                .map(p => `<option value="${esc(p.id)}">${esc(p.char_name || '')}</option>`).join('');
+            updateOpenedTitle();
+        }
+
+        function flashTiles(ids) {
+            ids.forEach(id => {
+                const tile = document.querySelector(`.player-tile[data-id="${CSS.escape(String(id))}"]`);
+                if (!tile) return;
+                tile.classList.remove('flash');
+                void tile.offsetWidth; // перезапуск анимации
+                tile.classList.add('flash');
+            });
+        }
+
+        function updatePlayersStatus() {
+            let color, label;
+            if (playersLastOk === false) { color = '#d46a66'; label = 'Нет связи с базой'; }
+            else if (playersRealtimeOk) { color = '#7fbf8e'; label = 'Изменения видны мгновенно'; }
+            else if (playersPollTimer) { color = '#e0b85a'; label = 'Обновление раз в 5 секунд'; }
+            else { color = '#e0b85a'; label = 'Подключение…'; }
+            document.getElementById('players-status').innerHTML = `<span style="color: ${color};">●</span> ${label}`;
+        }
+
+        // Загрузка всех персонажей. При повторной загрузке подсвечиваем тех, у кого что-то поменялось
+        let loadingPlayers = false;
+        async function loadPlayers() {
+            if (loadingPlayers) return;
+            loadingPlayers = true;
+            const { data, error } = await supabase.from('characters').select('*');
+            loadingPlayers = false;
+            playersLastOk = !error;
+            if (!error) {
+                const before = new Map(players.map(p => [String(p.id), JSON.stringify(p)]));
+                const firstLoad = players.length === 0;
+                players = data || [];
+                renderPlayers();
+                if (!firstLoad) flashTiles(players.filter(p => before.get(String(p.id)) !== JSON.stringify(p)).map(p => p.id));
+            }
+            updatePlayersStatus();
+        }
+
+        function startPlayersPolling() {
+            if (!playersPollTimer) playersPollTimer = setInterval(loadPlayers, POLL_MS);
+        }
+
+        supabase
+            .channel('master-characters')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'characters' }, (payload) => {
+                if (payload.eventType === 'DELETE') {
+                    players = players.filter(p => String(p.id) !== String(payload.old.id));
+                    renderPlayers();
+                    return;
+                }
+                const row = payload.new;
+                const i = players.findIndex(p => String(p.id) === String(row.id));
+                if (i >= 0) players[i] = row; else players.push(row);
+                renderPlayers();
+                flashTiles([row.id]);
+            })
+            .subscribe((status) => {
+                playersRealtimeOk = status === 'SUBSCRIBED';
+                if (playersRealtimeOk) {
+                    clearInterval(playersPollTimer);
+                    playersPollTimer = null;
+                    loadPlayers(); // подтягиваем то, что могли пропустить без соединения
+                } else {
+                    startPlayersPolling();
+                }
+                updatePlayersStatus();
+            });
+        // Подстраховка: если realtime молчит дольше 10 секунд, включаем опрос
+        setTimeout(() => { if (!playersRealtimeOk) { startPlayersPolling(); updatePlayersStatus(); } }, 10000);
+
+        document.getElementById('players-search').addEventListener('input', renderPlayers);
+
+        document.getElementById('players-grid').addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
+            const id = btn.closest('.player-tile').dataset.id;
+            if (btn.dataset.action === 'open') {
+                openPlayerSheet(id);
+            } else if (btn.dataset.action === 'copy') {
+                const url = sheetUrl(id, 'pc');
+                try {
+                    await navigator.clipboard.writeText(url);
+                    btn.textContent = '✓ Скопировано';
+                    setTimeout(() => { btn.textContent = '🔗 Ссылка'; }, 1500);
+                } catch {
+                    window.prompt('Ссылка на лист игрока:', url);
+                }
+            }
+        });
+
+        // --- Лист игрока поверх пульта: тот же лист, что у игрока, правки сохраняются сразу ---
+        const overlay = document.getElementById('sheet-overlay');
+        const frame = document.getElementById('sheet-frame');
+        let unloadTimer = null;
+
+        function updateOpenedTitle() {
+            if (!openedPlayerId) return;
+            const p = players.find(x => String(x.id) === openedPlayerId);
+            document.getElementById('sheet-panel-name').textContent = (p && p.char_name) || 'Без имени';
+            document.getElementById('sheet-panel-id').textContent = 'ID: ' + openedPlayerId;
+        }
+
+        function showSheetMode() {
+            document.querySelectorAll('.sheet-mode button').forEach(b => b.classList.toggle('active', b.dataset.mode === sheetMode));
+            document.getElementById('sheet-frame-wrap').classList.toggle('mobile', sheetMode === 'mobile');
+            const url = sheetUrl(openedPlayerId, sheetMode);
+            document.getElementById('sheet-panel-newtab').href = url;
+            frame.src = url;
+        }
+
+        window.openPlayerSheet = function(id) {
+            clearTimeout(unloadTimer);
+            openedPlayerId = String(id);
+            updateOpenedTitle();
+            showSheetMode();
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closePlayerSheet = function() {
+            if (!overlay.classList.contains('active')) return;
+            // Снимаем фокус с поля в листе — так последняя правка точно уйдёт в базу
+            try { frame.contentDocument.activeElement.blur(); } catch {}
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            openedPlayerId = null;
+            // Выгружаем лист чуть позже, чтобы сохранение успело завершиться
+            unloadTimer = setTimeout(() => { frame.src = 'about:blank'; }, 4000);
+        };
+
+        document.querySelectorAll('.sheet-mode button').forEach(b => b.addEventListener('click', () => {
+            sheetMode = b.dataset.mode;
+            try { frame.contentDocument.activeElement.blur(); } catch {}
+            setTimeout(showSheetMode, 300);
+        }));
+
+        // Внутри пульта режим листа переключается кнопками на панели — свою кнопку листа прячем
+        frame.addEventListener('load', () => {
+            try {
+                const style = frame.contentDocument.createElement('style');
+                style.textContent = '.switch-version-btn, .switch-desktop-btn { display: none !important; }';
+                frame.contentDocument.head.appendChild(style);
+            } catch {}
+        });
+
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closePlayerSheet(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePlayerSheet(); });
+
+        // --- Вкладки пульта ---
+        function showView(name) {
+            document.querySelectorAll('.master-tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
+            document.querySelectorAll('.master-view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+            try { localStorage.setItem('master-view', name); } catch {}
+            if (name === 'cards') {
+                // Пока вкладка была скрыта, размеры текста карточек не считались — пересчитываем
+                window.updatePreview();
+                document.querySelectorAll('#existing-cards-grid .auto-resize-area').forEach(el => window.resizeCardText(el));
+                document.querySelectorAll('#existing-cards-grid .auto-resize-tags').forEach(el => window.resizeTagsText(el));
+            }
+        }
+        document.querySelectorAll('.master-tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
+        let savedView = null;
+        try { savedView = localStorage.getItem('master-view'); } catch {}
+        showView(savedView === 'cards' ? 'cards' : 'players');
+
         // Инициализация
+        updatePlayersStatus();
+        loadPlayers();
         fetchCards();
         window.updatePreview();
     </script>
