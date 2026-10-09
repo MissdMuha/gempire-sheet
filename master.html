@@ -18,21 +18,7 @@
 
         h1 { border-bottom: 2px solid #635a55; padding-bottom: 10px; font-family: 'Georgia', serif; text-align: center; }
 
-        .admin-container {
-            display: flex;
-            gap: 40px;
-            max-width: 1000px;
-            width: 100%;
-            background: #38332f;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin-bottom: 40px;
-            align-items: flex-start;
-        }
-
         /* Стили формы */
-        .form-section { flex: 1; display: flex; flex-direction: column; gap: 15px; }
         .form-group { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 12px; text-transform: uppercase; font-weight: bold; color: #dcd3cb; letter-spacing: 1px;}
         input, select, textarea {
@@ -62,28 +48,7 @@
         }
         .btn-submit:hover { background-color: #7a706a; }
 
-        /* Плашка режима редактирования */
-        .edit-banner {
-            background: #4a443f;
-            border: 1px solid #c8b88f;
-            border-radius: 6px;
-            padding: 12px;
-            font-size: 13px;
-            color: #fbf6ec;
-            display: none;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .edit-banner.active { display: flex; }
-        .edit-banner b { color: #c8b88f; }
-        .btn-cancel-edit {
-            background: #7a706a; color: #fbf6ec; border: none;
-            padding: 9px; border-radius: 5px; font-weight: bold; cursor: pointer;
-        }
-        .btn-cancel-edit:hover { background: #8d827b; }
-
-        /* Идентичные стили для карточек (Предпросмотр + Список) */
-        .preview-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        /* Стили карточки (предпросмотр) */
         .card {
             background-color: #fbf6ec; width: 63.5mm; height: 88.9mm;
             border: 1px solid rgba(69, 63, 60, 0.1); border-radius: 8px;
@@ -118,46 +83,102 @@
         .footer-label { font-size: 7px; font-weight: 800; color: #8a807a; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1px; }
         .card-footer-tags-display { font-family: 'Segoe UI', sans-serif; font-size: 11px; font-weight: bold; color: #453f3c; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 
-        /* Список существующих карточек */
-        .cards-list-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center;}
-        .cards-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; width: 100%;}
-        .mini-card-wrapper { display: flex; flex-direction: column; gap: 10px; align-items: center; background: #38332f; padding: 12px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: calc(63.5mm + 24px); }
-        .mini-card-wrapper.is-editing { outline: 2px solid #c8b88f; }
-
-        /* Владельцы (чипы) */
-        .owners-block { width: 100%; display: flex; flex-direction: column; gap: 6px; }
-        .owners-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #dcd3cb; font-weight: bold; display: flex; justify-content: space-between; }
-        .copies-count { color: #a5c6df; }
-        .owners-row { display: flex; flex-wrap: wrap; gap: 6px; }
-        .owner-chip {
-            background: #635a55; padding: 3px 5px 3px 9px; border-radius: 4px;
-            font-size: 12px; font-weight: bold; color: #fbf6ec;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .owner-chip button {
-            background: transparent; border: none; color: #dcd3cb;
-            cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px;
-        }
-        .owner-chip button:hover { color: #fff; }
-
-        .add-owner-row { display: flex; gap: 6px; width: 100%; }
-        .add-owner-row input { flex: 1; padding: 7px 8px; font-size: 12px; }
-        .add-owner-row button {
-            background-color: #635a55; color: #fbf6ec; border: none;
-            padding: 0 12px; border-radius: 5px; font-weight: bold; cursor: pointer; white-space: nowrap;
-        }
-        .add-owner-row button:hover { background-color: #7a706a; }
-        
-        /* Кнопки управления карточкой */
-        .card-controls { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 2px; }
+        /* Кнопки */
         .btn-edit { background-color: #c8b88f; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
         .btn-edit:hover { background-color: #b9a878; }
-        .btn-copy { background-color: #a5c6df; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
-        .btn-copy:hover { background-color: #8db5d2; }
-        .btn-delete { background-color: #d4a3ae; color: #2b2b2b; border: none; padding: 7px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; }
-        .btn-delete:hover { background-color: #c78b98; }
-
         .card-link { color: #4a76a8; text-decoration: underline; text-decoration-style: dashed; font-weight: bold; }
+
+        /* --- Карточки: библиотека слева, редактор справа --- */
+        .cards-layout { width: 100%; max-width: 1360px; display: grid; grid-template-columns: minmax(320px, 1fr) minmax(0, 720px); gap: 20px; align-items: start; }
+        .library, .editor { background: #38332f; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .library { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+        .library-toolbar { display: flex; gap: 8px; }
+        .library-toolbar input { flex: 1; min-width: 0; }
+        .library-toolbar select { max-width: 45%; }
+        .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+        .pill-group button {
+            background: #2b2b2b; border: 1px solid #635a55; color: #dcd3cb; border-radius: 16px;
+            padding: 5px 12px; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center;
+        }
+        .pill-group button.active { background: #c8b88f; border-color: #c8b88f; color: #2b2b2b; font-weight: bold; }
+        .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+        .flesh-dot { background: #d4a3ae; } .will-dot { background: #bfa5df; } .method-dot { background: #a5c6df; }
+        .library-count { font-size: 12px; color: #a89f97; }
+        .library-list { display: flex; flex-direction: column; gap: 6px; }
+        .lib-empty { color: #8a807a; text-align: center; }
+        .lib-row { display: flex; background: #2b2b2b; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid transparent; }
+        .lib-row:hover { border-color: #635a55; }
+        .lib-row.active { border-color: #c8b88f; background: #3f3934; }
+        .lib-stripe { width: 6px; flex-shrink: 0; background: #635a55; }
+        .lib-stripe.flesh-theme { background: #d4a3ae; } .lib-stripe.will-theme { background: #bfa5df; } .lib-stripe.method-theme { background: #a5c6df; }
+        .lib-main { padding: 8px 12px; min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .lib-title { font-family: 'Georgia', serif; font-weight: bold; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
+        .lib-tag { font-family: 'Segoe UI', sans-serif; font-size: 11px; background: #fbf6ec; color: #2c2825; border-radius: 4px; padding: 0 5px; }
+        .lib-meta { font-size: 11px; color: #a89f97; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lib-desc { font-size: 12px; color: #cfc6bd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lib-owners { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+        .owner-mini { font-size: 11px; background: #4a4440; border-radius: 4px; padding: 1px 6px; color: #dcd3cb; }
+        .owner-mini.pool { background: #5a5236; color: #f0e2b0; }
+
+        .editor { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+        .editor-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #4a443f; gap: 10px; }
+        #editor-title { font-family: 'Georgia', serif; font-size: 18px; font-weight: bold; }
+        #editor-title small { display: block; font-family: 'Segoe UI', sans-serif; font-weight: normal; font-size: 12px; color: #c8b88f; }
+        .editor-body { display: flex; gap: 20px; padding: 16px; align-items: flex-start; flex-wrap: wrap; }
+        .editor-form { flex: 1; min-width: 280px; display: flex; flex-direction: column; gap: 12px; }
+        .preview-col { display: flex; flex-direction: column; align-items: center; gap: 8px; position: sticky; top: 0; width: calc(63.5mm + 4px); margin: 0 auto; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .grow { flex: 1; min-width: 0; }
+        .form-row .small { width: 120px; }
+        .desc-toolbar { display: flex; gap: 4px; flex-wrap: wrap; }
+        .desc-toolbar button { background: #4a443f; color: #fbf6ec; border: none; border-radius: 4px; padding: 5px 10px; cursor: pointer; font-family: 'Georgia', serif; font-size: 14px; }
+        .desc-toolbar button:hover { background: #5c544e; }
+        #input_description { min-height: 150px; }
+        .owner-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+        .owner-toggle { background: #2b2b2b; border: 1px solid #635a55; color: #dcd3cb; border-radius: 16px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+        .owner-toggle small { color: #8a807a; margin-left: 5px; }
+        .owner-toggle.on { background: #c8b88f; border-color: #c8b88f; color: #2b2b2b; font-weight: bold; }
+        .owner-toggle.on small { color: #5a5236; }
+        .owner-toggle.adding { box-shadow: 0 0 0 2px #7fbf8e; }
+        .owner-toggle.removing { border-color: #d46a66; color: #d46a66; text-decoration: line-through; }
+        .owner-extra { display: flex; gap: 6px; }
+        .owner-extra input { flex: 1; min-width: 0; padding: 6px 8px; font-size: 13px; }
+        .owner-summary { font-size: 12px; color: #a89f97; min-height: 15px; }
+        /* Кнопки всегда видны внизу редактора, даже если форма длиннее экрана */
+        .editor-actions {
+            display: flex; gap: 8px; flex-wrap: wrap; position: sticky; bottom: 0; z-index: 2;
+            background: #38332f; padding: 10px 0; margin-bottom: -10px; box-shadow: 0 -8px 12px -8px rgba(0,0,0,0.5);
+        }
+        .editor-actions .btn-submit { flex: 1; margin-top: 0; font-size: 14px; white-space: nowrap; }
+        .btn-secondary { background: #4a443f; color: #fbf6ec; border: none; border-radius: 5px; padding: 10px 12px; font-weight: bold; cursor: pointer; }
+        .btn-secondary:hover { background: #5c544e; }
+        .btn-danger { background: transparent; color: #d4a3ae; border: 1px solid #d4a3ae; border-radius: 5px; padding: 10px 12px; font-weight: bold; cursor: pointer; }
+        .btn-danger:hover { background: rgba(212, 163, 174, 0.12); }
+        .status-msg { min-height: 18px; font-weight: bold; font-size: 13px; text-align: center; }
+        .fit-warning { font-size: 12px; color: #e0b85a; text-align: center; min-height: 16px; }
+        .hint { font-size: 11px; color: #8a807a; text-align: center; }
+
+        /* Подсказки из существующих значений */
+        .suggest {
+            position: absolute; z-index: 3000; background: #2b2b2b; border: 1px solid #635a55; border-radius: 6px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5); max-height: 260px; overflow-y: auto; display: none;
+        }
+        .suggest.open { display: block; }
+        .suggest-item { padding: 6px 10px; cursor: pointer; display: flex; justify-content: space-between; gap: 14px; font-size: 13px; }
+        .suggest-item small { color: #8a807a; }
+        .suggest-item.active, .suggest-item:hover { background: #4a443f; }
+        .link-popover {
+            position: absolute; z-index: 2900; background: #38332f; border: 1px solid #635a55; border-radius: 8px;
+            padding: 10px; width: 290px; display: none; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+        .link-popover.open { display: flex; flex-direction: column; gap: 6px; }
+        .link-popover input { padding: 7px 9px; }
+        .link-popover small { color: #a89f97; font-size: 11px; }
+
+        @media (max-width: 1100px) {
+            .cards-layout { grid-template-columns: 1fr; }
+            .editor { order: -1; position: static; max-height: none; }
+        }
 
         /* --- Вкладки пульта --- */
         .master-tabs { display: flex; gap: 8px; margin: -6px 0 24px; }
@@ -263,82 +284,116 @@
         </div>
     </div>
 
-    <!-- Подсказка ID игроков в полях «кому выдать» -->
-    <datalist id="player-ids"></datalist>
-
     <div id="view-cards" class="master-view">
-    <div class="admin-container">
-        <form class="form-section" id="add-card-form">
-            <div class="edit-banner" id="edit-banner">
-                <span id="edit-banner-text"></span>
-                <button type="button" class="btn-cancel-edit" onclick="cancelEdit()">Отменить редактирование</button>
-            </div>
+        <div class="cards-layout">
+            <!-- Библиотека: все карточки в игре и заготовки персонажа pool -->
+            <section class="library">
+                <div class="library-toolbar">
+                    <input type="search" id="lib-search" placeholder="Поиск по названию, тексту, тэгам…">
+                    <select id="lib-owner"><option value="">Все владельцы</option></select>
+                </div>
+                <div class="pill-group" id="lib-theme">
+                    <button type="button" data-theme="" class="active">Все</button>
+                    <button type="button" data-theme="flesh-theme"><i class="dot flesh-dot"></i>Плоть</button>
+                    <button type="button" data-theme="will-theme"><i class="dot will-dot"></i>Воля</button>
+                    <button type="button" data-theme="method-theme"><i class="dot method-dot"></i>Метод</button>
+                </div>
+                <div class="library-count" id="lib-count"></div>
+                <div class="library-list" id="library-list"></div>
+            </section>
 
-            <div class="form-group" id="owner-field-group">
-                <label>ID Игрока (Кому выдать)</label>
-                <input type="text" id="input_owner_id" list="player-ids" placeholder="Например: 1, 404-elf">
-            </div>
-            <div class="form-group">
-                <label>Тема (Цвет)</label>
-                <select id="input_theme">
-                    <option value="flesh-theme">Плоть (Розовый)</option>
-                    <option value="will-theme">Воля (Фиолетовый)</option>
-                    <option value="method-theme">Метод (Синий)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тип (Надзаголовок)</label>
-                <input type="text" id="input_label" value="НАВЫК" oninput="updatePreview()">
-            </div>
-            <div class="form-group">
-                <label>Название способности</label>
-                <input type="text" id="input_title" placeholder="Например: Тяжелый удар" oninput="updatePreview()">
-            </div>
-            <div class="form-group">
-                <label>Метка (Правый квадрат)</label>
-                <input type="text" id="input_tag" placeholder="I, 2ОВ, 5+" oninput="updatePreview()">
-            </div>
-            <div class="form-group">
-                <label>Описание (Механика)</label>
-                <textarea id="input_description" placeholder="Используйте <b>текст</b> для жирного шрифта..." oninput="updatePreview()"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Тэги в подвале</label>
-                <input type="text" id="input_footer" placeholder="Оружие, Контакт, Сила" oninput="updatePreview()">
-            </div>
-            
-            <button type="submit" class="btn-submit" id="submit-btn">Выдать карточку</button>
-            <div id="status-msg" style="color: #a5c6df; font-weight: bold; text-align: center; height: 20px;"></div>
-        </form>
-
-        <div class="preview-section">
-            <label style="color: #a5c6df;">Предпросмотр карточки</label>
-            <div class="card">
-                <div class="card-frame">
-                    <div class="card-header">
-                        <div class="card-title-box">
-                            <div class="card-label-display" id="prev_label">НАВЫК</div>
-                            <div class="card-title-display" id="prev_title">Без названия</div>
+            <!-- Редактор карточки -->
+            <section class="editor" id="editor">
+                <div class="editor-head">
+                    <div id="editor-title"></div>
+                    <button type="button" class="btn-secondary" id="btn-new">＋ Новая</button>
+                </div>
+                <div class="editor-body">
+                    <form class="editor-form" id="card-form" autocomplete="off">
+                        <div class="form-group">
+                            <label>Цвет</label>
+                            <div class="pill-group" id="theme-pick">
+                                <button type="button" data-theme="flesh-theme"><i class="dot flesh-dot"></i>Плоть</button>
+                                <button type="button" data-theme="will-theme"><i class="dot will-dot"></i>Воля</button>
+                                <button type="button" data-theme="method-theme"><i class="dot method-dot"></i>Метод</button>
+                            </div>
                         </div>
-                        <div class="card-tag-box"><div class="card-tag-display" id="prev_tag"></div></div>
-                    </div>
-                    <div class="card-body flesh-theme" id="prev_theme">
-                        <div class="card-rich-text auto-resize-area" id="prev_desc" data-max-size="14"></div>
-                    </div>
-                    <div class="card-footer">
-                        <div class="footer-label">ТЭГИ</div>
-                        <div class="card-footer-tags-display auto-resize-tags" id="prev_footer" data-max-size="11"></div>
+                        <div class="form-row">
+                            <div class="form-group grow">
+                                <label>Тип (надзаголовок)</label>
+                                <input type="text" id="input_label" value="НАВЫК">
+                            </div>
+                            <div class="form-group small">
+                                <label>Метка</label>
+                                <input type="text" id="input_tag" placeholder="I, 2ОВ, 5+">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Название способности</label>
+                            <input type="text" id="input_title" placeholder="Например: Тяжелый удар">
+                        </div>
+                        <div class="form-group">
+                            <label>Описание (механика)</label>
+                            <div class="desc-toolbar">
+                                <button type="button" data-wrap="b" title="Жирный (Ctrl+B)"><b>Ж</b></button>
+                                <button type="button" data-wrap="i" title="Курсив (Ctrl+I)"><i>К</i></button>
+                                <button type="button" id="btn-link" title="Вставить ссылку на другую карточку">🔗 Ссылка на карточку</button>
+                            </div>
+                            <textarea id="input_description" placeholder="Выделите текст и нажмите Ж или К. Ссылка на другую карточку — кнопка 🔗."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Тэги в подвале</label>
+                            <input type="text" id="input_footer" placeholder="Оружие, Контакт, Сила">
+                        </div>
+                        <div class="form-group">
+                            <label>Кому выдать</label>
+                            <div class="owner-pick" id="owner-pick"></div>
+                            <div class="owner-extra">
+                                <input type="text" id="owner-extra" placeholder="Другой ID игрока…">
+                                <button type="button" class="btn-secondary" id="owner-extra-add">Добавить</button>
+                            </div>
+                            <div class="owner-summary" id="owner-summary"></div>
+                        </div>
+                        <div class="editor-actions">
+                            <button type="submit" class="btn-submit" id="submit-btn">Выдать</button>
+                            <button type="button" class="btn-secondary" id="btn-duplicate" title="Создать новую карточку на основе этой">Копия как новая</button>
+                            <button type="button" class="btn-danger" id="btn-delete"></button>
+                        </div>
+                        <div class="status-msg" id="status-msg"></div>
+                    </form>
+
+                    <div class="preview-col">
+                        <label style="color: #a5c6df;">Предпросмотр</label>
+                        <div class="card">
+                            <div class="card-frame">
+                                <div class="card-header">
+                                    <div class="card-title-box">
+                                        <div class="card-label-display" id="prev_label">НАВЫК</div>
+                                        <div class="card-title-display" id="prev_title">Без названия</div>
+                                    </div>
+                                    <div class="card-tag-box"><div class="card-tag-display" id="prev_tag"></div></div>
+                                </div>
+                                <div class="card-body flesh-theme" id="prev_theme">
+                                    <div class="card-rich-text auto-resize-area" id="prev_desc" data-max-size="14"></div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="footer-label">ТЭГИ</div>
+                                    <div class="card-footer-tags-display auto-resize-tags" id="prev_footer" data-max-size="11"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="fit-warning" id="fit-warning"></div>
+                        <div class="hint">Ctrl+Enter — выдать / сохранить</div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 
-    <div class="cards-list-container">
-        <h1>Выданные карточки в игре</h1>
-        <div class="cards-grid" id="existing-cards-grid">
-            </div>
-    </div>
+    <!-- Выбор карточки для ссылки [[…]] -->
+    <div class="link-popover" id="link-popover">
+        <input type="text" id="link-search" placeholder="Название карточки…" autocomplete="off">
+        <small>Выберите из списка или нажмите Enter, чтобы вставить как есть</small>
     </div>
 
     <script type="module">
@@ -408,83 +463,203 @@
             }).join('\u0001');
         }
 
-        // Живое обновление предпросмотра
-        window.updatePreview = function() {
-            document.getElementById('prev_label').innerText = document.getElementById('input_label').value || 'НАВЫК';
-            document.getElementById('prev_title').innerText = document.getElementById('input_title').value || 'Без названия';
-            document.getElementById('prev_tag').innerText = document.getElementById('input_tag').value;
-            
-            const descBox = document.getElementById('prev_desc');
-            descBox.innerHTML = window.parseCardLinks(document.getElementById('input_description').value); 
-            
-            const footerEl = document.getElementById('prev_footer');
-            footerEl.innerText = document.getElementById('input_footer').value;
-            
-            const theme = document.getElementById('input_theme').value;
-            document.getElementById('prev_theme').className = `card-body ${theme}`;
-            
-            window.resizeCardText(descBox);
-            window.resizeTagsText(footerEl);
-        };
-        
-        document.getElementById('input_theme').addEventListener('change', window.updatePreview);
+        // ===================== КАРТОЧКИ: библиотека и редактор =====================
+        // Заготовки хранятся у «персонажа» pool: игроки их не видят, а карточка не пропадает,
+        // даже если убрать её у всех игроков
+        const POOL_ID = 'pool';
+        const isPool = (id) => String(id).toLowerCase() === POOL_ID;
+        const THEMES = ['flesh-theme', 'will-theme', 'method-theme'];
 
-        // Состояние
-        window.allGroups = [];          // сгруппированные карточки
-        window.editingGroup = null;     // { ids: [...] } когда редактируем
+        let allCards = [];                // все строки таблицы cards
+        let groups = [];                  // одинаковые карточки, сгруппированные по содержимому
+        let editing = null;               // редактируемая группа { owners: [{ id, owner_id }] }; null — новая карточка
+        let selectedOwners = new Set();   // кому выдать / у кого оставить (owner_id)
+        let currentTheme = 'flesh-theme';
+        let dirty = false;                // в редакторе есть несохранённые правки
+        const libFilter = { q: '', theme: '', owner: '' };
 
-        // Считываем содержимое из формы
-        function readFormContent() {
-            return {
-                theme: document.getElementById('input_theme').value,
-                card_label: document.getElementById('input_label').value,
-                card_title: document.getElementById('input_title').value,
-                card_tag: document.getElementById('input_tag').value,
-                card_description: document.getElementById('input_description').value,
-                card_footer_tags: document.getElementById('input_footer').value
-            };
+        const $ = (id) => document.getElementById(id);
+
+        // Текст описания без тегов — для поиска и строки в списке
+        const plain = (html) => String(html || '')
+            .replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]*>/g, '').replace(/\[\[(.*?)\]\]/g, '$1')
+            .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+            .replace(/\s+/g, ' ').trim();
+
+        function ownerName(id) {
+            if (isPool(id)) return '📚 Библиотека';
+            const p = players.find(x => String(x.id) === String(id));
+            return (p && p.char_name) || String(id);
         }
 
-        // Заполняем форму содержимым группы
-        function fillFormFromContent(c) {
-            const themeSelect = document.getElementById('input_theme');
-            const theme = (c.theme || '').trim();
-            const options = Array.from(themeSelect.options).map(o => o.value);
-            if (options.includes(theme)) themeSelect.value = theme;
+        const byName = (a, b) => ownerName(a).localeCompare(ownerName(b), 'ru', { numeric: true });
 
-            document.getElementById('input_label').value = c.card_label || '';
-            document.getElementById('input_title').value = c.card_title || '';
-            document.getElementById('input_tag').value = c.card_tag || '';
-            document.getElementById('input_description').value = c.card_description || '';
-            document.getElementById('input_footer').value = c.card_footer_tags || '';
+        function setStatus(text, ok = true) {
+            const el = $('status-msg');
+            el.style.color = ok ? '#a5c6df' : '#d4a3ae';
+            el.innerText = text;
+        }
+
+        function flashStatus(text) {
+            setStatus(text);
+            setTimeout(() => { if ($('status-msg').innerText === text) setStatus(''); }, 3000);
+        }
+
+        // --- Предпросмотр ---
+        window.updatePreview = function() {
+            $('prev_label').innerText = $('input_label').value || 'НАВЫК';
+            $('prev_title').innerText = $('input_title').value || 'Без названия';
+            $('prev_tag').innerText = $('input_tag').value;
+            const descBox = $('prev_desc');
+            descBox.innerHTML = window.parseCardLinks($('input_description').value);
+            const footerEl = $('prev_footer');
+            footerEl.innerText = $('input_footer').value.replace(/[,\s]+$/, '');
+            $('prev_theme').className = `card-body ${currentTheme}`;
+            window.resizeCardText(descBox);
+            window.resizeTagsText(footerEl);
+            updateFitWarning();
+        };
+
+        // Предупреждение, если текст не помещается в карточку
+        function updateFitWarning() {
+            const desc = $('prev_desc'), title = $('prev_title'), footer = $('prev_footer');
+            if (!desc.parentElement.clientHeight) return; // вкладка скрыта — размеры не считаются
+            const notes = [];
+            const fs = parseFloat(desc.style.fontSize);
+            if (desc.scrollHeight > desc.parentElement.clientHeight) notes.push('⚠ Описание не помещается даже мелким шрифтом — сократите текст');
+            else if (fs < 14) notes.push(`Описание ужато до ${fs} px, чтобы поместиться`);
+            if (title.scrollWidth > title.clientWidth) notes.push('⚠ Название не помещается и обрезается');
+            if (footer.scrollWidth > footer.clientWidth) notes.push('⚠ Тэги не помещаются');
+            const tag = $('prev_tag');
+            if (tag.scrollWidth > tag.parentElement.clientWidth - 2) notes.push('⚠ Метка не помещается в квадрат');
+            $('fit-warning').innerHTML = notes.map(esc).join('<br>');
+        }
+
+        function setTheme(theme) {
+            currentTheme = THEMES.includes(theme) ? theme : 'flesh-theme';
+            document.querySelectorAll('#theme-pick button').forEach(b => b.classList.toggle('active', b.dataset.theme === currentTheme));
             window.updatePreview();
         }
 
-        function setStatus(text, ok = true) {
-            const s = document.getElementById('status-msg');
-            s.style.color = ok ? '#a5c6df' : '#d4a3ae';
-            s.innerText = text;
+        function readFormContent() {
+            return {
+                theme: currentTheme,
+                card_label: $('input_label').value,
+                card_title: $('input_title').value,
+                card_tag: $('input_tag').value,
+                card_description: $('input_description').value,
+                card_footer_tags: $('input_footer').value.replace(/[,\s]+$/, '')
+            };
         }
 
-        // Загрузка и группировка карточек
+        function fillForm(c) {
+            $('input_label').value = c.card_label || '';
+            $('input_title').value = c.card_title || '';
+            $('input_tag').value = c.card_tag || '';
+            $('input_description').value = c.card_description || '';
+            $('input_footer').value = c.card_footer_tags || '';
+            setTheme((c.theme || '').trim());
+        }
+
+        // --- Кому выдать ---
+        function ownerCandidates() {
+            const ids = new Set([POOL_ID]);
+            players.forEach(p => { if (!isPool(p.id)) ids.add(String(p.id)); });
+            allCards.forEach(c => { if (!isPool(c.owner_id)) ids.add(String(c.owner_id)); });
+            selectedOwners.forEach(id => { if (!isPool(id)) ids.add(id); });
+            const rest = [...ids].filter(id => !isPool(id)).sort(byName);
+            return [POOL_ID, ...rest];
+        }
+
+        function renderOwnerPick() {
+            const original = new Set(editing ? editing.owners.map(o => String(o.owner_id)) : []);
+            // id библиотеки в базе может быть записан иначе (например, Pool) — сравниваем без регистра
+            const has = (set, id) => isPool(id) ? [...set].some(isPool) : set.has(id);
+            $('owner-pick').innerHTML = ownerCandidates().map(id => {
+                const on = has(selectedOwners, id);
+                const was = has(original, id);
+                const state = editing ? (on && !was ? ' adding' : (!on && was ? ' removing' : '')) : '';
+                const name = ownerName(id);
+                const idHint = isPool(id) || name === id ? '' : `<small>${esc(id)}</small>`;
+                return `<button type="button" class="owner-toggle${on ? ' on' : ''}${state}" data-owner="${esc(id)}">${esc(name)}${idHint}</button>`;
+            }).join('');
+            updateEditorButtons();
+        }
+
+        function toggleOwner(id) {
+            const existing = [...selectedOwners].find(x => isPool(id) ? isPool(x) : x === id);
+            if (existing !== undefined) selectedOwners.delete(existing);
+            else selectedOwners.add(isPool(id) && editing ? (editing.owners.find(o => isPool(o.owner_id))?.owner_id ?? POOL_ID) : id);
+            dirty = true;
+            renderOwnerPick();
+        }
+
+        function updateEditorButtons() {
+            const btn = $('submit-btn');
+            const owners = [...selectedOwners];
+            if (editing) {
+                btn.textContent = 'Сохранить изменения';
+                const original = editing.owners.map(o => String(o.owner_id));
+                const add = owners.filter(id => !original.includes(id));
+                const remove = original.filter(id => !selectedOwners.has(id));
+                const parts = [];
+                if (add.length) parts.push('выдать: ' + add.map(ownerName).join(', '));
+                if (remove.length) parts.push('убрать у: ' + remove.map(ownerName).join(', '));
+                $('owner-summary').textContent = parts.length
+                    ? 'При сохранении — ' + parts.join('; ')
+                    : `Правки применятся ко всем копиям (${original.length})`;
+                $('btn-delete').textContent = `Удалить у всех (${editing.owners.length})`;
+            } else {
+                const onlyPool = owners.length === 1 && isPool(owners[0]);
+                btn.textContent = !owners.length ? 'Выдать' : onlyPool ? 'Сохранить в библиотеку' : `Выдать (${owners.length})`;
+                $('owner-summary').textContent = owners.length ? '' : 'Отметьте игроков или Библиотеку';
+            }
+            $('btn-duplicate').style.display = editing ? '' : 'none';
+            $('btn-delete').style.display = editing ? '' : 'none';
+            $('editor-title').innerHTML = editing
+                ? 'Редактирование<small>Правки применятся ко всем копиям этой карточки</small>'
+                : 'Новая карточка<small>Заполните поля и отметьте, кому выдать</small>';
+        }
+
+        // --- Переключение между карточками ---
+        function confirmDiscard() {
+            return !dirty || confirm('В редакторе есть несохранённые изменения. Отменить их?');
+        }
+
+        function startNew({ keepContent = false, owners = [] } = {}) {
+            editing = null;
+            if (!keepContent) fillForm({ theme: currentTheme, card_label: 'НАВЫК' });
+            selectedOwners = new Set(owners.map(String));
+            dirty = keepContent;
+            renderOwnerPick();
+            renderLibrary();
+        }
+
+        function editGroup(g) {
+            editing = { owners: g.owners.map(o => ({ ...o })) };
+            fillForm(g);
+            selectedOwners = new Set(g.owners.map(o => String(o.owner_id)));
+            dirty = false;
+            setStatus('');
+            renderOwnerPick();
+            renderLibrary();
+            if (window.innerWidth <= 1100) $('editor').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Загрузка и библиотека ---
         async function fetchCards() {
             const { data: cards, error } = await supabase.from('cards').select('*').order('owner_id');
-            if (!error) {
-                cardCounts = new Map();
-                (cards || []).forEach(c => cardCounts.set(String(c.owner_id), (cardCounts.get(String(c.owner_id)) || 0) + 1));
-                renderPlayers();
-            }
-            const grid = document.getElementById('existing-cards-grid');
-            grid.innerHTML = '';
-
             if (error) {
-                grid.innerHTML = `<p style="color: red;">Ошибка загрузки базы: ${esc(error.message)}</p>`;
+                $('library-list').innerHTML = `<p class="lib-empty" style="color: #d4a3ae;">Ошибка загрузки базы: ${esc(error.message)}</p>`;
                 return;
             }
+            allCards = cards || [];
+            cardCounts = new Map();
+            allCards.forEach(c => cardCounts.set(String(c.owner_id), (cardCounts.get(String(c.owner_id)) || 0) + 1));
 
-            // Группируем по подписи содержимого
+            // Группируем одинаковые карточки по содержимому
             const map = new Map();
-            (cards || []).forEach(card => {
+            allCards.forEach(card => {
                 const sig = cardSignature(card);
                 if (!map.has(sig)) {
                     const group = { sig, owners: [] };
@@ -493,208 +668,388 @@
                 }
                 map.get(sig).owners.push({ id: card.id, owner_id: card.owner_id });
             });
+            groups = [...map.values()];
+            groups.forEach(g => g.owners.sort((a, b) => isPool(a.owner_id) ? -1 : isPool(b.owner_id) ? 1 : byName(a.owner_id, b.owner_id)));
 
-            window.allGroups = Array.from(map.values());
-            // владельцев — по порядку для стабильности
-            window.allGroups.forEach(g => g.owners.sort((a, b) =>
-                String(a.owner_id).localeCompare(String(b.owner_id), 'ru', { numeric: true })
-            ));
-
-            if (window.allGroups.length === 0) {
-                grid.innerHTML = '<p style="color:#8a807a;">Пока ни одной карточки не выдано.</p>';
-                return;
+            // Редактируемая карточка могла измениться в базе — обновляем список её копий
+            if (editing) {
+                const ids = new Set(editing.owners.map(o => o.id));
+                const g = groups.find(x => x.owners.some(o => ids.has(o.id)));
+                if (g) editing.owners = g.owners.map(o => ({ ...o }));
+                else if (!dirty) startNew();
             }
-
-            window.allGroups.forEach((g, index) => {
-                const safeTheme = g.theme ? g.theme.trim() : '';
-                const isEditing = window.editingGroup &&
-                    g.owners.some(o => window.editingGroup.ids.includes(o.id));
-
-                const chips = g.owners.map(o => `
-                    <span class="owner-chip">
-                        ${esc(o.owner_id)}
-                        <button title="Убрать у этого игрока" onclick="removeFromOwner('${esc(o.id)}')">&times;</button>
-                    </span>`).join('');
-
-                const html = `
-                    <div class="mini-card-wrapper ${isEditing ? 'is-editing' : ''}">
-                        <div class="owners-block">
-                            <div class="owners-label">
-                                <span>Выдано игрокам</span>
-                                <span class="copies-count">${g.owners.length} коп.</span>
-                            </div>
-                            <div class="owners-row">${chips}</div>
-                            <div class="add-owner-row">
-                                <input type="text" id="add-owner-input-${index}" list="player-ids" placeholder="ID игрока…">
-                                <button onclick="addOwnerToGroup(${index})">+ Выдать</button>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-frame">
-                                <div class="card-header">
-                                    <div class="card-title-box">
-                                        <div class="card-label-display">${esc(g.card_label || '')}</div>
-                                        <div class="card-title-display">${esc(g.card_title || '')}</div>
-                                    </div>
-                                    <div class="card-tag-box"><div class="card-tag-display">${esc(g.card_tag || '')}</div></div>
-                                </div>
-                                <div class="card-body ${safeTheme}">
-                                    <div class="card-rich-text auto-resize-area" data-max-size="14">${window.parseCardLinks(g.card_description || '')}</div>
-                                </div>
-                                <div class="card-footer">
-                                    <div class="footer-label">ТЭГИ</div>
-                                    <div class="card-footer-tags-display auto-resize-tags" data-max-size="11">${esc(g.card_footer_tags || '')}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card-controls">
-                            <button class="btn-edit" onclick="editGroup(${index})">✎ Редактировать у всех</button>
-                            <button class="btn-copy" onclick="copyToForm(${index})">Взять как шаблон</button>
-                            <button class="btn-delete" onclick="deleteGroup(${index})">Удалить у всех (${g.owners.length})</button>
-                        </div>
-                    </div>
-                `;
-                grid.insertAdjacentHTML('beforeend', html);
-            });
-
-            // Авторесайз для всех карточек в списке
-            setTimeout(() => {
-                grid.querySelectorAll('.auto-resize-area').forEach(el => window.resizeCardText(el));
-                grid.querySelectorAll('.auto-resize-tags').forEach(el => window.resizeTagsText(el));
-            }, 100);
+            renderPlayers();
         }
 
-        // ВЗЯТЬ КАК ШАБЛОН (создать новую карточку на основе существующей)
-        window.copyToForm = function(index) {
-            cancelEdit();
-            const g = window.allGroups[index];
-            if (!g) return;
-            fillFormFromContent(g);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            setStatus('Содержимое перенесено в форму. Укажите игрока и выдайте.');
-            setTimeout(() => setStatus(''), 3000);
-        };
+        function renderOwnerFilter() {
+            const sel = $('lib-owner');
+            const ids = [...new Set(allCards.map(c => String(c.owner_id)))]
+                .sort((a, b) => isPool(a) ? -1 : isPool(b) ? 1 : byName(a, b));
+            sel.innerHTML = '<option value="">Все владельцы</option>' +
+                ids.map(id => `<option value="${esc(id)}">${esc(ownerName(id))}</option>`).join('');
+            if (!ids.includes(libFilter.owner)) libFilter.owner = '';
+            sel.value = libFilter.owner;
+        }
 
-        // РЕДАКТИРОВАНИЕ группы (правит все копии у всех владельцев)
-        window.editGroup = function(index) {
-            const g = window.allGroups[index];
-            if (!g) return;
+        function renderLibrary() {
+            const q = libFilter.q.trim().toLowerCase();
+            const editingIds = new Set(editing ? editing.owners.map(o => o.id) : []);
+            const list = groups.filter(g => {
+                if (libFilter.theme && (g.theme || '').trim() !== libFilter.theme) return false;
+                if (libFilter.owner && !g.owners.some(o => String(o.owner_id) === libFilter.owner)) return false;
+                if (q) {
+                    const hay = [g.card_title, g.card_label, g.card_tag, plain(g.card_description), g.card_footer_tags].join(' ').toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
+                return true;
+            }).sort((a, b) => String(a.card_title || '').localeCompare(String(b.card_title || ''), 'ru', { numeric: true }));
 
-            fillFormFromContent(g);
-            window.editingGroup = { ids: g.owners.map(o => o.id) };
+            $('lib-count').textContent = groups.length ? `Показано ${list.length} из ${groups.length}` : '';
+            $('library-list').innerHTML = list.length ? list.map(g => {
+                const theme = (g.theme || '').trim();
+                const active = g.owners.some(o => editingIds.has(o.id)) ? ' active' : '';
+                const owners = g.owners.map(o =>
+                    `<span class="owner-mini${isPool(o.owner_id) ? ' pool' : ''}">${esc(ownerName(o.owner_id))}</span>`).join('');
+                const meta = [g.card_label, g.card_footer_tags].filter(Boolean).map(esc).join(' · ');
+                const desc = plain(g.card_description);
+                return `
+                    <div class="lib-row${active}" data-group="${groups.indexOf(g)}">
+                        <div class="lib-stripe ${esc(theme)}"></div>
+                        <div class="lib-main">
+                            <div class="lib-title">${esc(g.card_title || 'Без названия')}${g.card_tag ? `<span class="lib-tag">${esc(g.card_tag)}</span>` : ''}</div>
+                            ${meta ? `<div class="lib-meta">${meta}</div>` : ''}
+                            ${desc ? `<div class="lib-desc">${esc(desc)}</div>` : ''}
+                            <div class="lib-owners">${owners}</div>
+                        </div>
+                    </div>`;
+            }).join('') : `<p class="lib-empty">${groups.length ? 'Ничего не нашлось.' : 'Пока ни одной карточки.'}</p>`;
+        }
 
-            const banner = document.getElementById('edit-banner');
-            const ownersText = g.owners.map(o => o.owner_id).join(', ');
-            document.getElementById('edit-banner-text').innerHTML =
-                `<b>Режим редактирования.</b><br>Изменения применятся ко всем копиям (${g.owners.length}) у игроков: ${esc(ownersText)}.`;
-            banner.classList.add('active');
+        // Имена игроков могли поменяться — обновляем всё, где они показаны
+        function refreshOwnerViews() {
+            renderOwnerFilter();
+            renderOwnerPick();
+            renderLibrary();
+        }
 
-            // Поле «кому выдать» при редактировании не нужно
-            document.getElementById('owner-field-group').style.display = 'none';
-            document.getElementById('submit-btn').innerText = `Сохранить изменения (${g.owners.length})`;
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            // подсветим карточку в списке
-            fetchCards();
-        };
-
-        window.cancelEdit = function() {
-            window.editingGroup = null;
-            document.getElementById('edit-banner').classList.remove('active');
-            document.getElementById('owner-field-group').style.display = '';
-            document.getElementById('submit-btn').innerText = 'Выдать карточку';
-        };
-
-        // Дораздать карточку ещё одному игроку
-        window.addOwnerToGroup = async function(index) {
-            const g = window.allGroups[index];
-            if (!g) return;
-            const input = document.getElementById('add-owner-input-' + index);
-            const owner = input.value.trim();
-            if (!owner) { input.focus(); return; }
-
-            const newCard = { owner_id: owner };
-            CONTENT_FIELDS.forEach(f => newCard[f] = g[f]);
-
-            const { error } = await supabase.from('cards').insert([newCard]);
-            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
-            else { setStatus(`Выдано игроку ${owner}.`); setTimeout(() => setStatus(''), 3000); }
-            fetchCards();
-        };
-
-        // Убрать карточку у одного игрока
-        window.removeFromOwner = async function(rowId) {
-            if (!confirm('Убрать эту карточку у данного игрока?')) return;
-            const { error } = await supabase.from('cards').delete().eq('id', rowId);
-            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
-            // если редактировали именно эту строку — обновим список ids
-            if (window.editingGroup) {
-                window.editingGroup.ids = window.editingGroup.ids.filter(id => id !== rowId);
-                if (window.editingGroup.ids.length === 0) cancelEdit();
-            }
-            fetchCards();
-        };
-
-        // Удалить карточку у всех владельцев
-        window.deleteGroup = async function(index) {
-            const g = window.allGroups[index];
-            if (!g) return;
-            if (!confirm(`Удалить эту карточку у всех ${g.owners.length} игроков навсегда?`)) return;
-            const ids = g.owners.map(o => o.id);
-            const { error } = await supabase.from('cards').delete().in('id', ids);
-            if (error) { setStatus(`Ошибка: ${error.message}`, false); }
-            if (window.editingGroup && window.editingGroup.ids.some(id => ids.includes(id))) cancelEdit();
-            fetchCards();
-        };
-
-        // Отправка формы: либо выдача новой, либо сохранение правок
-        document.getElementById('add-card-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // --- Сохранение ---
+        async function saveCard() {
             const content = readFormContent();
-
             if (!content.card_title.trim()) {
                 setStatus('Укажите название способности.', false);
+                $('input_title').focus();
+                return;
+            }
+            const owners = [...selectedOwners];
+
+            if (!editing) {
+                if (!owners.length) { setStatus('Отметьте, кому выдать карточку (или Библиотеку).', false); return; }
+                setStatus('Выдаём…');
+                const { error } = await supabase.from('cards').insert(owners.map(owner_id => ({ owner_id, ...content })));
+                if (error) { setStatus('Ошибка: ' + error.message, false); return; }
+                const onlyPool = owners.length === 1 && isPool(owners[0]);
+                flashStatus(onlyPool ? 'Сохранено в библиотеку.' : 'Выдано: ' + owners.map(ownerName).join(', ') + '.');
+                // Готовимся к следующей карточке: цвет, тип и получатели остаются, текст очищаем
+                ['input_title', 'input_tag', 'input_description', 'input_footer'].forEach(id => { $(id).value = ''; });
+                dirty = false;
+                window.updatePreview();
+                fetchCards();
                 return;
             }
 
-            if (window.editingGroup) {
-                // РЕЖИМ РЕДАКТИРОВАНИЯ — обновляем все копии
-                setStatus('Сохранение…');
-                const ids = window.editingGroup.ids;
-                if (!ids.length) { cancelEdit(); return; }
-                const { error } = await supabase.from('cards').update(content).in('id', ids);
-                if (error) {
-                    setStatus(`Ошибка: ${error.message}`, false);
-                } else {
-                    setStatus(`Сохранено для ${ids.length} игрок(ов).`);
-                    setTimeout(() => setStatus(''), 3000);
-                    cancelEdit();
-                    fetchCards();
-                }
+            const original = editing.owners;
+            const keep = original.filter(o => selectedOwners.has(String(o.owner_id)));
+            const remove = original.filter(o => !selectedOwners.has(String(o.owner_id)));
+            const add = owners.filter(id => !original.some(o => String(o.owner_id) === id));
+            if (!keep.length && !add.length) {
+                if (!confirm('Не отмечен ни один владелец — карточка будет удалена у всех и пропадёт совсем. Продолжить?')) return;
+            } else if (remove.length && !confirm('Убрать карточку у: ' + remove.map(o => ownerName(o.owner_id)).join(', ') + '?')) {
+                return;
+            }
+
+            setStatus('Сохранение…');
+            const errors = [];
+            let anchorId = keep.length ? keep[0].id : null;
+            if (keep.length) {
+                const { error } = await supabase.from('cards').update(content).in('id', keep.map(o => o.id));
+                if (error) errors.push(error.message);
+            }
+            if (add.length) {
+                const { data, error } = await supabase.from('cards').insert(add.map(owner_id => ({ owner_id, ...content }))).select('id');
+                if (error) errors.push(error.message);
+                else if (!anchorId && data && data.length) anchorId = data[0].id;
+            }
+            if (remove.length) {
+                const { error } = await supabase.from('cards').delete().in('id', remove.map(o => o.id));
+                if (error) errors.push(error.message);
+            }
+            if (errors.length) setStatus('Ошибка: ' + errors.join('; '), false);
+            else flashStatus('Сохранено.');
+
+            dirty = false;
+            editing = anchorId ? { owners: [{ id: anchorId }] } : null;
+            await fetchCards();
+            const g = anchorId && groups.find(x => x.owners.some(o => o.id === anchorId));
+            if (g) editGroup(g); else startNew();
+        }
+
+        async function deleteEditing() {
+            if (!editing) return;
+            const n = editing.owners.length;
+            const inPool = editing.owners.some(o => isPool(o.owner_id));
+            const msg = inPool
+                ? `Удалить карточку у всех (${n}), включая Библиотеку? Она пропадёт совсем.`
+                : `Удалить карточку у всех игроков (${n})? В Библиотеке её нет — она пропадёт совсем.`;
+            if (!confirm(msg)) return;
+            const { error } = await supabase.from('cards').delete().in('id', editing.owners.map(o => o.id));
+            if (error) { setStatus('Ошибка: ' + error.message, false); return; }
+            dirty = false;
+            startNew();
+            flashStatus('Карточка удалена.');
+            fetchCards();
+        }
+
+        // --- Оформление описания: <b>, <i> и ссылки [[…]] ---
+        function insertText(ta, text) {
+            // execCommand сохраняет возможность отменить правку через Ctrl+Z
+            if (!document.execCommand('insertText', false, text)) {
+                ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }
+
+        function wrapDescription(tag) {
+            const ta = $('input_description');
+            const open = `<${tag}>`, close = `</${tag}>`;
+            const { selectionStart: s, selectionEnd: e, value: v } = ta;
+            ta.focus();
+            if (v.slice(s - open.length, s) === open && v.slice(e, e + close.length) === close) {
+                // Уже оформлено — снимаем оформление
+                ta.setSelectionRange(s - open.length, e + close.length);
+                insertText(ta, v.slice(s, e));
+                ta.setSelectionRange(s - open.length, e - open.length);
             } else {
-                // РЕЖИМ ВЫДАЧИ — создаём новую карточку
-                const owner = document.getElementById('input_owner_id').value.trim();
-                if (!owner) { setStatus('Укажите ID игрока.', false); return; }
+                insertText(ta, open + v.slice(s, e) + close);
+                ta.setSelectionRange(s + open.length, e + open.length);
+            }
+        }
 
-                setStatus('Отправка…');
-                const newCard = Object.assign({ owner_id: owner }, content);
-                const { error } = await supabase.from('cards').insert([newCard]);
+        let linkRange = [0, 0];
+        function openLinkPicker() {
+            const ta = $('input_description');
+            linkRange = [ta.selectionStart, ta.selectionEnd];
+            const r = $('btn-link').getBoundingClientRect();
+            const pop = $('link-popover');
+            pop.style.left = (r.left + window.scrollX) + 'px';
+            pop.style.top = (r.bottom + 6 + window.scrollY) + 'px';
+            pop.classList.add('open');
+            const input = $('link-search');
+            input.value = ta.value.slice(linkRange[0], linkRange[1]);
+            input.focus();
+            input.select();
+        }
 
-                if (error) {
-                    setStatus(`Ошибка: ${error.message}`, false);
-                } else {
-                    setStatus('Успешно выдано игроку!');
-                    setTimeout(() => setStatus(''), 3000);
-                    document.getElementById('input_title').value = '';
-                    document.getElementById('input_tag').value = '';
-                    document.getElementById('input_description').value = '';
-                    document.getElementById('input_footer').value = '';
-                    window.updatePreview();
-                    fetchCards();
+        function closeLinkPicker() {
+            $('link-popover').classList.remove('open');
+        }
+
+        function insertLink(title) {
+            title = title.trim();
+            closeLinkPicker();
+            const ta = $('input_description');
+            ta.focus();
+            ta.setSelectionRange(linkRange[0], linkRange[1]);
+            if (title) insertText(ta, `[[${title}]]`);
+        }
+
+        // --- Подсказки из уже существующих значений ---
+        const suggestBox = document.createElement('div');
+        suggestBox.className = 'suggest';
+        document.body.appendChild(suggestBox);
+        let suggestFor = null, suggestItems = [], suggestActive = -1;
+
+        // Все значения поля из существующих карточек, самые частые — первыми.
+        // Тэги разбираются по запятым, регистр не важен
+        function suggestValues(field) {
+            const counts = new Map();
+            for (const c of allCards) {
+                const raw = c[field];
+                if (!raw) continue;
+                const parts = field === 'card_footer_tags' ? String(raw).split(',') : [String(raw)];
+                for (const part of parts) {
+                    const v = part.trim();
+                    if (!v) continue;
+                    const key = v.toLowerCase();
+                    const entry = counts.get(key) || { v, n: 0 };
+                    entry.n++;
+                    counts.set(key, entry);
                 }
+            }
+            return [...counts.values()].sort((a, b) => b.n - a.n || a.v.localeCompare(b.v, 'ru'));
+        }
+
+        function hideSuggest() {
+            suggestBox.classList.remove('open');
+            suggestFor = null;
+        }
+
+        function highlightSuggest() {
+            suggestBox.querySelectorAll('.suggest-item').forEach((el, i) => el.classList.toggle('active', i === suggestActive));
+            const active = suggestBox.querySelector('.suggest-item.active');
+            if (active) active.scrollIntoView({ block: 'nearest' });
+        }
+
+        function pickSuggest(i) {
+            const { input, multi, onPick } = suggestFor;
+            const v = suggestItems[i].v;
+            if (onPick) { hideSuggest(); onPick(v); return; }
+            if (multi) {
+                const cut = input.value.lastIndexOf(',');
+                input.value = (cut >= 0 ? input.value.slice(0, cut + 1) + ' ' : '') + v + ', ';
+            } else {
+                input.value = v;
+            }
+            input.dispatchEvent(new Event('input', { bubbles: true })); // обновит превью; для тэгов — покажет следующие
+            if (!multi) hideSuggest();
+        }
+
+        function attachSuggest(input, { field, multi = false, onPick = null }) {
+            // При фокусе показываем все варианты, при наборе — только подходящие
+            const show = (e) => {
+                const value = input.value;
+                const typed = (multi ? value.slice(value.lastIndexOf(',') + 1) : value).trim().toLowerCase();
+                const token = e && e.type === 'focus' && !multi ? '' : typed;
+                const used = multi ? new Set(value.split(',').slice(0, -1).map(x => x.trim().toLowerCase())) : new Set();
+                let items = suggestValues(field).filter(x => !used.has(x.v.toLowerCase()) && x.v.toLowerCase() !== typed);
+                if (token) {
+                    items = items.filter(x => x.v.toLowerCase().includes(token));
+                    items.sort((a, b) => b.v.toLowerCase().startsWith(token) - a.v.toLowerCase().startsWith(token));
+                }
+                items = items.slice(0, 8);
+                suggestFor = { input, multi, onPick };
+                suggestItems = items;
+                suggestActive = -1;
+                if (!items.length) { suggestBox.classList.remove('open'); return; }
+                suggestBox.innerHTML = items.map((x, i) =>
+                    `<div class="suggest-item" data-i="${i}"><span>${esc(x.v)}</span><small>${x.n}</small></div>`).join('');
+                const r = input.getBoundingClientRect();
+                suggestBox.style.left = (r.left + window.scrollX) + 'px';
+                suggestBox.style.top = (r.bottom + 2 + window.scrollY) + 'px';
+                suggestBox.style.minWidth = r.width + 'px';
+                suggestBox.classList.add('open');
+            };
+            input.setAttribute('autocomplete', 'off');
+            input.addEventListener('focus', show);
+            input.addEventListener('input', show);
+            input.addEventListener('blur', () => setTimeout(() => {
+                if (suggestFor && suggestFor.input === input && document.activeElement !== input) hideSuggest();
+            }, 150));
+            input.addEventListener('keydown', (e) => {
+                if (!suggestBox.classList.contains('open') || !suggestFor || suggestFor.input !== input) return;
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const n = suggestItems.length;
+                    suggestActive = e.key === 'ArrowDown' ? (suggestActive + 1) % n : (suggestActive - 1 + n) % n;
+                    highlightSuggest();
+                } else if ((e.key === 'Enter' || e.key === 'Tab') && suggestActive >= 0) {
+                    e.preventDefault();
+                    pickSuggest(suggestActive);
+                } else if (e.key === 'Escape') {
+                    hideSuggest();
+                }
+            });
+        }
+
+        suggestBox.addEventListener('mousedown', (e) => {
+            e.preventDefault(); // не снимаем фокус с поля
+            const item = e.target.closest('.suggest-item');
+            if (item) pickSuggest(+item.dataset.i);
+        });
+
+        // --- События редактора и библиотеки ---
+        const form = $('card-form');
+        form.addEventListener('input', (e) => {
+            if (e.target.id === 'owner-extra') return;
+            dirty = true;
+            window.updatePreview();
+        });
+        form.addEventListener('submit', (e) => { e.preventDefault(); saveCard(); });
+        // Ctrl+Enter — выдать / сохранить, где бы ни был фокус на вкладке «Карточки»
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && $('view-cards').classList.contains('active')) {
+                e.preventDefault();
+                saveCard();
+            }
+        });
+        form.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter' || e.ctrlKey || e.metaKey) return;
+            if (e.target.tagName === 'INPUT' && !e.defaultPrevented) {
+                // Enter в поле не выдаёт карточку случайно — для этого Ctrl+Enter
+                e.preventDefault();
+                if (e.target.id === 'owner-extra') $('owner-extra-add').click();
             }
         });
 
+        $('input_description').addEventListener('keydown', (e) => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            const key = e.key.toLowerCase();
+            if (key === 'b' || key === 'и') { e.preventDefault(); wrapDescription('b'); }
+            if (key === 'i' || key === 'ш') { e.preventDefault(); wrapDescription('i'); }
+        });
+        document.querySelectorAll('.desc-toolbar [data-wrap]').forEach(btn =>
+            btn.addEventListener('click', () => wrapDescription(btn.dataset.wrap)));
+        $('btn-link').addEventListener('click', openLinkPicker);
+        $('link-search').addEventListener('keydown', (e) => {
+            const suggestionChosen = suggestBox.classList.contains('open') && suggestActive >= 0;
+            if (e.key === 'Enter' && !suggestionChosen) { e.preventDefault(); insertLink($('link-search').value); }
+            if (e.key === 'Escape') { closeLinkPicker(); $('input_description').focus(); }
+        });
+        $('link-search').addEventListener('blur', () => setTimeout(() => {
+            if (!$('link-popover').contains(document.activeElement)) closeLinkPicker();
+        }, 150));
+
+        document.querySelectorAll('#theme-pick button').forEach(b => b.addEventListener('click', () => {
+            dirty = true;
+            setTheme(b.dataset.theme);
+        }));
+        $('owner-pick').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-owner]');
+            if (b) toggleOwner(b.dataset.owner);
+        });
+        $('owner-extra-add').addEventListener('click', () => {
+            const id = $('owner-extra').value.trim();
+            if (!id) return;
+            if (![...selectedOwners].some(x => x === id || isPool(x) && isPool(id))) toggleOwner(id);
+            $('owner-extra').value = '';
+        });
+        $('btn-new').addEventListener('click', () => { if (confirmDiscard()) { startNew(); setStatus(''); $('input_title').focus(); } });
+        $('btn-duplicate').addEventListener('click', () => {
+            startNew({ keepContent: true });
+            setStatus('Это копия: измените её и выдайте как новую карточку.');
+        });
+        $('btn-delete').addEventListener('click', deleteEditing);
+
+        $('library-list').addEventListener('click', (e) => {
+            const row = e.target.closest('.lib-row');
+            if (!row) return;
+            const g = groups[+row.dataset.group];
+            if (g && confirmDiscard()) editGroup(g);
+        });
+        $('lib-search').addEventListener('input', (e) => { libFilter.q = e.target.value; renderLibrary(); });
+        $('lib-owner').addEventListener('change', (e) => { libFilter.owner = e.target.value; renderLibrary(); });
+        document.querySelectorAll('#lib-theme button').forEach(b => b.addEventListener('click', () => {
+            libFilter.theme = b.dataset.theme;
+            document.querySelectorAll('#lib-theme button').forEach(x => x.classList.toggle('active', x === b));
+            renderLibrary();
+        }));
+
+        attachSuggest($('input_label'), { field: 'card_label' });
+        attachSuggest($('input_tag'), { field: 'card_tag' });
+        attachSuggest($('input_title'), { field: 'card_title' });
+        attachSuggest($('input_footer'), { field: 'card_footer_tags', multi: true });
+        attachSuggest($('link-search'), { field: 'card_title', onPick: insertLink });
+
+        window.addEventListener('beforeunload', (e) => { if (dirty) e.preventDefault(); });
 
         // ===================== ГЛАЗ БОГА: листы всех персонажей =====================
         const POLL_MS = 5000;
@@ -743,8 +1098,9 @@
                         <span class="stat method">Метод<b>${val(p.stat_method)}</b></span>
                     </div>
                     <div class="player-foot">Карточек: ${cardCounts.get(id) || 0}</div>
+                    <button class="btn-edit" data-action="open">👁 Открыть лист</button>
                     <div class="player-actions">
-                        <button class="btn-edit" data-action="open">👁 Открыть лист</button>
+                        <button class="btn-link" data-action="give" title="Открыть конструктор карточек с этим игроком">🃏 Выдать карточку</button>
                         <button class="btn-link" data-action="copy" title="Скопировать ссылку на лист для игрока">🔗 Ссылка</button>
                     </div>
                 </div>`;
@@ -754,15 +1110,15 @@
             const grid = document.getElementById('players-grid');
             const q = document.getElementById('players-search').value.trim().toLowerCase();
             const list = players
+                .filter(p => !isPool(p.id))
                 .filter(p => !q || String(p.char_name || '').toLowerCase().includes(q) || String(p.id).toLowerCase().includes(q))
                 .sort((a, b) => String(a.char_name || a.id).localeCompare(String(b.char_name || b.id), 'ru', { numeric: true }));
             grid.innerHTML = list.length
                 ? list.map(playerTile).join('')
-                : `<p class="players-empty">${players.length ? 'Никого не нашлось.' : 'Пока нет ни одного персонажа.'}</p>`;
-            document.getElementById('players-count').textContent = players.length;
-            document.getElementById('player-ids').innerHTML = players
-                .map(p => `<option value="${esc(p.id)}">${esc(p.char_name || '')}</option>`).join('');
+                : `<p class="players-empty">${players.some(p => !isPool(p.id)) ? 'Никого не нашлось.' : 'Пока нет ни одного персонажа.'}</p>`;
+            document.getElementById('players-count').textContent = players.filter(p => !isPool(p.id)).length;
             updateOpenedTitle();
+            refreshOwnerViews();
         }
 
         function flashTiles(ids) {
@@ -842,6 +1198,17 @@
             const id = btn.closest('.player-tile').dataset.id;
             if (btn.dataset.action === 'open') {
                 openPlayerSheet(id);
+            } else if (btn.dataset.action === 'give') {
+                // Новая карточка — просто отмечаем игрока; если редактировали другую — начинаем новую
+                if (editing) {
+                    if (!confirmDiscard()) return;
+                    startNew({ owners: [id] });
+                } else {
+                    selectedOwners = new Set([id]);
+                    renderOwnerPick();
+                }
+                showView('cards');
+                $('input_title').focus();
             } else if (btn.dataset.action === 'copy') {
                 const url = sheetUrl(id, 'pc');
                 try {
@@ -917,12 +1284,8 @@
             document.querySelectorAll('.master-tab').forEach(t => t.classList.toggle('active', t.dataset.view === name));
             document.querySelectorAll('.master-view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
             try { localStorage.setItem('master-view', name); } catch {}
-            if (name === 'cards') {
-                // Пока вкладка была скрыта, размеры текста карточек не считались — пересчитываем
-                window.updatePreview();
-                document.querySelectorAll('#existing-cards-grid .auto-resize-area').forEach(el => window.resizeCardText(el));
-                document.querySelectorAll('#existing-cards-grid .auto-resize-tags').forEach(el => window.resizeTagsText(el));
-            }
+            // Пока вкладка была скрыта, размер текста в превью не считался — пересчитываем
+            if (name === 'cards') window.updatePreview();
         }
         document.querySelectorAll('.master-tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
         let savedView = null;
@@ -930,10 +1293,10 @@
         showView(savedView === 'cards' ? 'cards' : 'players');
 
         // Инициализация
+        startNew();
         updatePlayersStatus();
         loadPlayers();
         fetchCards();
-        window.updatePreview();
     </script>
 </body>
 </html>
