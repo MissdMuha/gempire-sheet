@@ -60,6 +60,8 @@
         .switch-version-btn:hover {
             background-color: #635a55;
         }
+        /* Кнопка карты похода — под кнопкой версии для телефона */
+        .open-map-btn { top: 68px; text-decoration: none; }
 
         @page { size: A4; margin: 0; }
         @media print {
@@ -548,6 +550,7 @@
     <button class="switch-version-btn" onclick="window.location.href='mobile.html' + window.location.search">
         📱
     </button>
+    <a class="switch-version-btn open-map-btn" id="open-map-btn" href="map.html" title="Карта похода">🗺</a>
 
     <div class="sheet">
         <div class="header-grid serif-font">
@@ -876,6 +879,8 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const charId = urlParams.get('id');
+    // На карте пометки будут подписаны именем этого персонажа
+    if (charId) document.getElementById('open-map-btn').href = 'map.html?id=' + encodeURIComponent(charId);
 
     if (!charId) {
         alert("Ошибка: ID персонажа не указан. Используйте ссылку вида ?id=номер");

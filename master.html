@@ -206,6 +206,14 @@
         .master-view { display: none; width: 100%; flex-direction: column; align-items: center; }
         .master-view.active { display: flex; }
 
+        /* --- Карта похода внутри пульта --- */
+        .map-toolbar { width: 100%; max-width: 1400px; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; font-size: 13px; color: #dcd3cb; }
+        .map-toolbar .grow { flex: 1; min-width: 200px; }
+        .map-toolbar a { color: #a5c6df; text-decoration: none; }
+        .map-toolbar a:hover { text-decoration: underline; }
+        .map-frame-wrap { width: 100%; max-width: 1400px; height: calc(100vh - 210px); min-height: 520px; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #F1EADB; }
+        .map-frame-wrap iframe { border: none; width: 100%; height: 100%; display: block; }
+
         /* --- Глаз бога: все персонажи --- */
         .players-toolbar { width: 100%; max-width: 1100px; display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
         .players-toolbar input { flex: 1; min-width: 200px; }
@@ -270,6 +278,17 @@
     <div class="master-tabs">
         <button class="master-tab" data-view="players">👁 Глаз бога</button>
         <button class="master-tab" data-view="cards">🃏 Карточки</button>
+        <button class="master-tab" data-view="map">🗺 Карта</button>
+    </div>
+
+    <!-- Карта похода: версия мастера (скрытые метки, туман, выбор текущей карты) -->
+    <div id="view-map" class="master-view">
+        <div class="map-toolbar">
+            <span class="grow">Игроки видят карту, отмеченную «у игроков», — без скрытых пометок и того, что под туманом.</span>
+            <button type="button" class="btn-link" id="map-copy-players" title="Ссылка, которую можно дать игрокам">🔗 Ссылка для игроков</button>
+            <a href="master-map.html" target="_blank" rel="noopener">Открыть карту мастера отдельно ↗</a>
+        </div>
+        <div class="map-frame-wrap"><iframe id="map-frame" title="Карта мастера"></iframe></div>
     </div>
 
     <!-- Глаз бога: листы всех персонажей -->
@@ -1416,11 +1435,25 @@
             try { localStorage.setItem('master-view', name); } catch {}
             // Пока вкладка была скрыта, размер текста в превью не считался — пересчитываем
             if (name === 'cards') window.updatePreview();
+            // Карту грузим, только когда её открыли
+            const mapFrame = document.getElementById('map-frame');
+            if (name === 'map' && !mapFrame.src) mapFrame.src = 'master-map.html';
         }
+        document.getElementById('map-copy-players').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            const url = new URL('map.html', location.href).href;
+            try {
+                await navigator.clipboard.writeText(url);
+                btn.textContent = '✓ Скопировано';
+                setTimeout(() => { btn.textContent = '🔗 Ссылка для игроков'; }, 1500);
+            } catch {
+                window.prompt('Ссылка на карту для игроков:', url);
+            }
+        });
         document.querySelectorAll('.master-tab').forEach(t => t.addEventListener('click', () => showView(t.dataset.view)));
         let savedView = null;
         try { savedView = localStorage.getItem('master-view'); } catch {}
-        showView(savedView === 'cards' ? 'cards' : 'players');
+        showView(savedView === 'cards' || savedView === 'map' ? savedView : 'players');
 
         // Инициализация
         startNew();

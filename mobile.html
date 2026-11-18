@@ -65,6 +65,8 @@
         .switch-desktop-btn:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
+        /* Кнопка карты похода — слева в верхней строке */
+        .open-map-btn { right: auto; left: 15px; text-decoration: none; }
 
         /* Контент вкладок */
         .tab-content {
@@ -529,6 +531,7 @@
 
     <div class="top-bar">
         <input type="text" id="char_name" class="char-name-input" placeholder="Имя персонажа">
+        <a class="switch-desktop-btn open-map-btn" id="open-map-btn" href="map.html" title="Карта похода">🗺</a>
         <button class="switch-desktop-btn" onclick="window.location.href='index.html' + window.location.search" title="Вернуться на ПК-версию">
             💻
         </button>
@@ -765,6 +768,8 @@
         const charId = urlParams.get('id');
 
         if (!charId) alert("Ошибка: ID персонажа не указан.");
+        // На карте пометки будут подписаны именем этого персонажа
+        if (charId) document.getElementById('open-map-btn').href = 'map.html?id=' + encodeURIComponent(charId);
 
         // Экранирует одиночный "<", который не начинает тег (например «урон <5»). Теги вроде <b> работают как раньше
         function fixText(text) {
