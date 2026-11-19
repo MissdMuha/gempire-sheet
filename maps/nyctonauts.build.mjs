@@ -182,7 +182,12 @@ for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     if (distToPoly(cx, cy, GAT, false) < 0.75) { kind[i] = 's'; continue; } // гать идёт по чёрной низине
     if (distToPoly(cx, cy, DRY_PINE, false) < 1.15 + noise(cx, cy, 67) * 0.4) { kind[i] = 'c'; tierSet[i] = '2'; continue; } // Сухой Бор
     if (inThicket(sx, sy)) { kind[i] = 'thicket'; continue; }
-    if (inPoly(sx, sy, SWAMP)) { kind[i] = 's'; continue; }
+    if (inPoly(sx, sy, SWAMP)) {
+        // Болота здесь — не гладь, а полузатопленный лес. Открытая топь — только каймой у озёр и редкими окнами
+        const nearPool = POOLS.some(([px, py, pr]) => Math.hypot(sx0 - px, sy0 - py) < pr + 34);
+        kind[i] = nearPool || noise(cx / 2.1, cy / 2.1, 71) > 0.24 ? 's' : 'b';
+        continue;
+    }
     if (inPoly(wc, wr, FOOTHILLS)) { kind[i] = 'h'; continue; }
     // кривой ельник по дороге на Гряду — на западе, между горами и болотом, до границы леса
     if (sx < 625 + noise(cx / 1.6, cy / 1.6, 47) * 40 && sy > 640) { kind[i] = 'c'; continue; }
@@ -207,7 +212,7 @@ for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     else if (k === 'f') {
         T[i] = 'f';
         let edge = false;
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const n = at(c + dc, r + dr); if (n === 's' || n === 'c' || n === 'w' || n === 'p') edge = true; }
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const n = at(c + dc, r + dr); if (n === 's' || n === 'b' || n === 'c' || n === 'w' || n === 'p') edge = true; }
         TIER[i] = edge ? '1' : '2';
     } else { T[i] = k; if (tierSet[i]) TIER[i] = tierSet[i]; }
 }
@@ -244,4 +249,4 @@ marks.push(mark('zone', { name: 'Поваленный рыжий лес', ink: '
 const out = { kind: 'gempire-map', def, marks };
 writeFileSync(new URL('./nyctonauts.json', import.meta.url), JSON.stringify(out));
 const count = ch => T.filter(x => x === ch).length;
-console.log(`Никтонавты: ${COLS}×${ROWS}, горы ${count('m')}, лес ${count('f')}, ельник ${count('c')}, холмы ${count('h')}, равнина ${count('p')}, топь ${count('s')}, вода ${count('w')}; селений ${def.places.length}, дорог ${def.roads.length}, пометок ${marks.length} (скрытых ${marks.filter(m => m.hidden).length})`);
+console.log(`Никтонавты: ${COLS}×${ROWS}, горы ${count('m')}, лес ${count('f')}, ельник ${count('c')}, холмы ${count('h')}, равнина ${count('p')}, заболоченный лес ${count('b')}, топь ${count('s')}, вода ${count('w')}; селений ${def.places.length}, дорог ${def.roads.length}, пометок ${marks.length} (скрытых ${marks.filter(m => m.hidden).length})`);
