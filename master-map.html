@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Карта мастера — Gempire</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+SC:wght@400;500&display=swap&subset=cyrillic" rel="stylesheet">
+    <link rel="stylesheet" href="lib/map/map.css">
+</head>
+<body>
+    <!-- Карта мастера: выбор текущей карты, рельеф, туман, скрытые метки. Игрокам эту ссылку не давать -->
+    <div id="map-root"></div>
+    <script type="module">
+        import { startMap } from './lib/map/app.js';
+        startMap({ role: 'gm' });
+    </script>
+</body>
+</html>
