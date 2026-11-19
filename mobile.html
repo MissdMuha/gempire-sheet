@@ -215,10 +215,14 @@
             align-items: center;
             justify-content: center;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
         }
 
         .attribute-value-box input {
             width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 0 2px;
             border: none;
             background: transparent;
             text-align: center;
@@ -1028,12 +1032,28 @@
         }
 
         // Раскладывает данные персонажа по полям (поле, которое сейчас редактируют, не трогаем)
+        // Значение характеристики (например «10+») уменьшаем, пока не влезет в окошко
+        function fitStat(input) {
+            if (!input || !input.closest('.attribute-value-box')) return;
+            const cs = getComputedStyle(input), ctx = (fitStat.c ||= document.createElement('canvas').getContext('2d'));
+            const room = input.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 2;
+            if (room <= 0) return;
+            let size = 22;
+            do { ctx.font = `${cs.fontWeight} ${size}px ${cs.fontFamily}`; } while (ctx.measureText(input.value || '0').width > room && --size > 10);
+            input.style.fontSize = size + 'px';
+        }
+        const statInputs = () => document.querySelectorAll('.attribute-value-box input');
+        statInputs().forEach(el => el.addEventListener('input', () => fitStat(el)));
+        window.addEventListener('resize', () => statInputs().forEach(fitStat));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => statInputs().forEach(fitStat));
+
         function applyCharacter(character) {
             for (const key in character) {
                 if (key === 'notes') { notesEditor.setHtml(character[key]); continue; }
                 const input = document.getElementById(key);
                 if (input && document.activeElement !== input) {
                     input.value = character[key] || '';
+                    fitStat(input);
                     if (input.classList.contains('mobile-line-textarea')) {
                         autoExpandTextarea(input);
                         if (typeof window.updateInputDisplay === 'function') window.updateInputDisplay(key);

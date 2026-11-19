@@ -160,6 +160,9 @@
         }
         .stat-input {
             width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 0 2px;
             height: 100%;
             background: transparent;
             border: none;
@@ -868,6 +871,8 @@
             window.addEventListener('resize', function() { resizeText(input); });
             setTimeout(() => resizeText(input), 50);
         });
+        // шрифт мог догрузиться позже — пересчитываем размеры, чтобы значения не вылезали из окошек
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll('.auto-resize').forEach(resizeText));
     </script>
     <script type="module">
     import { createClient } from './lib/supabase.js'
