@@ -5,8 +5,9 @@
 // ничего не отдаёт, а сама работает через функции базы под ключом (supabase/map-setup.sql, раздел 6) —
 // служебных прав у неё нет.
 //
-// Как развернуть — КАРТА.md, раздел «Claude». Коротко: Supabase → Edge Functions → Deploy a new function →
-// Via Editor → имя map-mcp → вставить этот файл → Deploy; затем в настройках функции выключить «Verify JWT»
+// Как развернуть — КАРТА.md, раздел «Claude». Коротко: Supabase → Edge Functions → «Open Editor» (если функций ещё нет)
+// или «Deploy a new function» → «Via Editor»; заменить код этим файлом, внизу «Function name» — map-mcp → «Deploy function»;
+// затем на странице функции, вкладка «Details», выключить «Verify JWT with legacy secret» → «Save changes»
 // (или из консоли: supabase functions deploy map-mcp --no-verify-jwt).
 // Подключить: claude.ai → Настройки → Коннекторы → Добавить свой → адрес коннектора из окна «Доступ для Claude».
 
@@ -162,7 +163,8 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
     async function rpc(fn, args) {
         const res = await fetchImpl(`${url}/rest/v1/rpc/${fn}`, {
             method: 'POST',
-            headers: { apikey: anon, Authorization: `Bearer ${anon}`, 'Content-Type': 'application/json' },
+            // старый ключ anon — это JWT, его можно передать и как Authorization; новый publishable — только apikey
+            headers: { apikey: anon, ...(String(anon).startsWith('eyJ') ? { Authorization: `Bearer ${anon}` } : {}), 'Content-Type': 'application/json' },
             body: JSON.stringify(args)
         });
         const text = await res.text();
@@ -262,6 +264,13 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
     };
 }
 
+// Публичный ключ проекта: старый SUPABASE_ANON_KEY, а если его нет — первый из новых SUPABASE_PUBLISHABLE_KEYS
+function publicKey() {
+    const legacy = Deno.env.get('SUPABASE_ANON_KEY');
+    if (legacy) return legacy;
+    try { const keys = JSON.parse(Deno.env.get('SUPABASE_PUBLISHABLE_KEYS') || '{}'); return Object.values(keys)[0] || ''; } catch { return ''; }
+}
+
 if (typeof Deno !== 'undefined' && Deno.serve) {
-    Deno.serve(createHandler({ url: Deno.env.get('SUPABASE_URL'), anon: Deno.env.get('SUPABASE_ANON_KEY') }));
+    Deno.serve(createHandler({ url: Deno.env.get('SUPABASE_URL'), anon: publicKey() }));
 }
