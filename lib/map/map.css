@@ -48,6 +48,11 @@ a:hover { color: var(--ink); }
 .gm-svg.tool-inspect [data-mid] { cursor: grab; }
 .ghost { opacity: 0.62; }
 .gm-hid { opacity: 0.45; }
+.gm-seg { display: inline-flex; }
+.gm-seg .gm-btn + .gm-btn { margin-left: -1px; }
+/* включённая группа пометок — с подложкой, выключенная — бледная и зачёркнутая */
+.gm-seg .gm-btn[aria-pressed="true"] { background: var(--hover); }
+.gm-seg .gm-btn[aria-pressed="false"] { color: var(--muted); text-decoration: line-through; }
 /* Мастер выбрал «Скрытое: ярко» — скрытое от игроков как обычное (пунктир и ◌ остаются) */
 .gm-root.hidden-bright .ghost, .gm-root.hidden-bright .gm-hid { opacity: 1; }
 
