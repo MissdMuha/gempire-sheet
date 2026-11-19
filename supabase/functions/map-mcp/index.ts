@@ -2,6 +2,7 @@
 // Коннектор «Карта» для Claude (MCP-сервер) — функция Supabase (Edge Function).
 // Claude видит карту целиком (и скрытое от игроков), может дописывать и править справку мастера по клеткам,
 // ставить, править и убирать пометки мастера (не игроков). Новые пометки скрыты от игроков — показывает их мастер.
+// Ещё Claude читает листы персонажей и карточки способностей (только чтение).
 // Доступ — по ключу Claude: он стоит в адресе коннектора (…/functions/v1/map-mcp?key=КЛЮЧ). Без ключа функция
 // ничего не отдаёт, а сама работает через функции базы под ключом (supabase/map-setup.sql, раздел 6) —
 // служебных прав у неё нет.
@@ -152,6 +153,45 @@ function cellInfo(map, cell) {
     return out.join('\n');
 }
 
+// ---------- Листы персонажей и карточки ----------
+// HTML заметок и описаний → простой текст: абзацы и строки сохраняются, жирный — **так**, курсив — *так*
+function htmlText(h) {
+    return String(h || '')
+        .replace(/<\s*br\s*\/?>/gi, '\n').replace(/<\/(p|div|li|h\d)>/gi, '\n').replace(/<li[^>]*>/gi, '- ')
+        .replace(/<\/?(b|strong)>/gi, '**').replace(/<\/?(i|em)>/gi, '*').replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&')
+        .replace(/\n{3,}/g, '\n\n').trim();
+}
+const STAT = { flesh: 'Плоть', method: 'Метод', will: 'Воля' };
+const THEME = { 'flesh-theme': 'Плоть', 'will-theme': 'Воля', 'method-theme': 'Метод' };
+const SHEET_FIELDS = new Set(['id', 'char_name', 'hp_current', 'hp_max', 'willpower_current', 'willpower_max', 'armor', 'stat_flesh', 'stat_method', 'stat_will', 'notes', 'created_at', 'updated_at']);
+function filled(c, prefix, n) { const out = []; for (let i = 1; i <= n; i++) { const v = String(c[prefix + i] ?? '').trim(); if (v) out.push(v); } return out; }
+function sheetText(c, cards) {
+    const out = [`Лист персонажа «${c.char_name || '(без имени)'}» (id ${c.id})`];
+    const pair = (a, b) => [a, b].map(v => String(v ?? '').trim() || '—').join(' / ');
+    out.push(`ХП ${pair(c.hp_current, c.hp_max)} · Очки воли ${pair(c.willpower_current, c.willpower_max)} · Броня ${String(c.armor ?? '').trim() || '—'}`);
+    out.push(`Характеристики: Плоть ${c.stat_flesh || '—'}, Метод ${c.stat_method || '—'}, Воля ${c.stat_will || '—'}`);
+    const t1 = Object.keys(STAT).map(k => { const v = filled(c, `t1_${k}_`, 6); return v.length ? `${STAT[k]}: ${v.join('; ')}` : ''; }).filter(Boolean);
+    out.push('\nПервая ступень (успех на 5+ для (1), 4+ для (2), 3+ для (3)):' + (t1.length ? '\n- ' + t1.join('\n- ') : ' —'));
+    const t2 = filled(c, 't2_', 12), t3 = filled(c, 't3_', 6), dg = filled(c, 'dogma_', 6), eq = filled(c, 'equip_', 20);
+    out.push('Вторая ступень (добавляют (X)к6 к проверкам, открывают особые способности): ' + (t2.length ? t2.join('; ') : '—'));
+    out.push('Третья ступень: ' + (t3.length ? t3.join('; ') : '—'));
+    out.push('Догмы и навыки догм: ' + (dg.length ? dg.join('; ') : '—'));
+    out.push('Снаряжение и предметы: ' + (eq.length ? eq.join('; ') : '—'));
+    // поля, которых лист пока не знает, — как есть
+    const extra = Object.entries(c).filter(([k, v]) => !SHEET_FIELDS.has(k) && !/^(t1_|t2_|t3_|dogma_|equip_)/.test(k) && v !== null && String(v).trim() !== '');
+    if (extra.length) out.push('Прочее: ' + extra.map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join('; '));
+    const notes = htmlText(c.notes);
+    out.push('\nЗаметки:' + (notes ? '\n' + notes : ' —'));
+    if (cards) out.push(`\nКарточки (${cards.length}):` + (cards.length ? '\n' + cards.map(k => cardText(k)).join('\n\n') : ' —'));
+    return out.join('\n');
+}
+function cardText(k, owners) {
+    const head = [k.card_label, THEME[String(k.theme || '').trim()]].filter(Boolean).join(' · ');
+    return [`■ ${k.card_title || '(без названия)'}${k.card_tag ? ` [${k.card_tag}]` : ''}${head ? ` — ${head}` : ''}${owners ? ` (у кого: ${owners})` : ''}`,
+        htmlText(k.card_description), k.card_footer_tags ? 'Тэги: ' + k.card_footer_tags : ''].filter(Boolean).join('\n');
+}
+
 // ---------- Инструменты ----------
 const MAP_ARG = { type: 'string', description: 'id или название карты; если не указать — карта, которая сейчас у игроков' };
 const TOOLS = [
@@ -186,7 +226,10 @@ const TOOLS = [
             }
         }
     },
-    { name: 'delete_gm_mark', description: 'Убрать пометку мастера по id (из view_map / view_cell). Пометки игроков убирать нельзя.', inputSchema: { type: 'object', properties: { map: MAP_ARG, id: { type: 'string' } }, required: ['id'] } }
+    { name: 'delete_gm_mark', description: 'Убрать пометку мастера по id (из view_map / view_cell). Пометки игроков убирать нельзя.', inputSchema: { type: 'object', properties: { map: MAP_ARG, id: { type: 'string' } }, required: ['id'] } },
+    { name: 'list_characters', description: 'Персонажи игроков: имя, id, ХП, очки воли, броня, характеристики, сколько карточек. Только чтение.', inputSchema: { type: 'object', properties: {} } },
+    { name: 'view_character', description: 'Лист персонажа целиком: характеристики, ступени, догмы, снаряжение, заметки — и его карточки способностей. Только чтение.', inputSchema: { type: 'object', properties: { character: { type: 'string', description: 'имя персонажа (можно часть) или id' } }, required: ['character'] } },
+    { name: 'list_cards', description: 'Карточки способностей: все, одного персонажа или библиотека заготовок мастера; можно искать по слову. Только чтение.', inputSchema: { type: 'object', properties: { owner: { type: 'string', description: 'имя или id персонажа; «библиотека» — заготовки мастера; пусто — все' }, query: { type: 'string', description: 'слово в названии, типе, описании или тэгах' } } } }
 ];
 
 export function createHandler({ url, anon, fetchImpl = fetch }) {
@@ -215,11 +258,43 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
         if (!hit) throw new Error(`нет карты «${map}». Есть: ${list.map(m => `«${m.name}» (${m.id})`).join(', ')}`);
         return hit.id;
     }
+    async function callGame(key, name, a) {
+        const cards = await rpc('game_cards', { p_key: key, p_owner: null });
+        const chars = await rpc('game_characters', { p_key: key });
+        const nameOf = id => String(id).toLowerCase() === 'pool' ? 'библиотека' : ((chars.find(c => String(c.id) === String(id)) || {}).char_name || `персонаж ${id}`);
+        if (name === 'list_characters') {
+            if (!chars.length) return 'Персонажей пока нет.';
+            return chars.map(c => `- «${c.char_name || '(без имени)'}» — id ${c.id}; ХП ${c.hp_current || '—'}/${c.hp_max || '—'}, ОВ ${c.willpower_current || '—'}/${c.willpower_max || '—'}, броня ${c.armor || '—'}; Плоть ${c.stat_flesh || '—'}, Метод ${c.stat_method || '—'}, Воля ${c.stat_will || '—'}; карточек: ${cards.filter(k => String(k.owner_id) === String(c.id)).length}`).join('\n') +
+                `\nВ библиотеке заготовок мастера карточек: ${cards.filter(k => String(k.owner_id).toLowerCase() === 'pool').length}.`;
+        }
+        if (name === 'view_character') {
+            const c = await rpc('game_character', { p_key: key, p_id: String(a.character || '').trim() });
+            return sheetText(c, cards.filter(k => String(k.owner_id) === String(c.id)));
+        }
+        // list_cards
+        let list = cards, who = 'все';
+        const owner = String(a.owner || '').trim();
+        if (owner) {
+            const low = owner.toLowerCase();
+            const id = /^(библиотека|pool|заготовки)$/.test(low) ? 'pool'
+                : (chars.find(c => String(c.id) === owner) || chars.find(c => String(c.char_name || '').toLowerCase() === low) || chars.find(c => String(c.char_name || '').toLowerCase().includes(low)) || {}).id;
+            if (id === undefined) throw new Error(`нет такого персонажа: «${owner}». Есть: ${chars.map(c => c.char_name).join(', ')}`);
+            list = cards.filter(k => String(k.owner_id) === String(id)); who = nameOf(id);
+        }
+        const q = String(a.query || '').trim().toLowerCase();
+        if (q) list = list.filter(k => ['card_title', 'card_label', 'card_tag', 'card_description', 'card_footer_tags'].some(f => String(k[f] || '').toLowerCase().includes(q)));
+        if (!list.length) return `Карточек не нашлось (${who}${q ? `, «${a.query}»` : ''}).`;
+        // одинаковые карточки у нескольких владельцев — одной записью
+        const groups = new Map();
+        for (const k of list) { const sig = [k.theme, k.card_label, k.card_title, k.card_tag, k.card_description, k.card_footer_tags].join('\u0001'); const g = groups.get(sig) || groups.set(sig, { k, owners: [] }).get(sig), who = nameOf(k.owner_id); if (!g.owners.includes(who)) g.owners.push(who); }
+        return `Карточки (${who}${q ? `, «${a.query}»` : ''}) — ${groups.size}:\n\n` + [...groups.values()].map(g => cardText(g.k, owner ? null : g.owners.join(', '))).join('\n\n');
+    }
     async function call(key, name, a = {}) {
         if (name === 'list_maps') {
             const list = await rpc('map_list', { p_key: key });
             return list.length ? list.map(m => `- «${m.name}» — id ${m.id}${m.is_current ? ', сейчас у игроков' : ''}; записей в справке: ${m.ref_entries}`).join('\n') : 'Карт пока нет.';
         }
+        if (name === 'list_characters' || name === 'view_character' || name === 'list_cards') return callGame(key, name, a);
         const map = await rpc('map_get', { p_key: key, p_map: await resolveMap(key, a.map) });
         if (name === 'view_map') return mapOverview(map, { fog: !!a.fog });
         if (name === 'view_cell') return cellInfo(map, a.cell);
@@ -270,7 +345,7 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
                     protocolVersion: VERSIONS.includes(params && params.protocolVersion) ? params.protocolVersion : VERSIONS[0],
                     capabilities: { tools: { listChanged: false } },
                     serverInfo: { name: 'gempire-map', title: 'Карта кампании', version: '1.0.0' },
-                    instructions: 'Карта настольной кампании и справка мастера по клеткам. Начните с list_maps или view_map; подробности о клетке — view_cell. Справку можно дописывать и править (set_reference_entries, remove_reference_entries), пометки мастера — ставить, править и убирать (set_gm_mark, delete_gm_mark); пометки игроков не трогаются. Новые пометки скрыты от игроков, показывает их мастер. Всё это — знание мастера: не пересказывайте его как то, что видят игроки.'
+                    instructions: 'Карта настольной кампании и справка мастера по клеткам; листы персонажей и карточки способностей — для чтения (list_characters, view_character, list_cards). Начните с list_maps или view_map; подробности о клетке — view_cell. Справку можно дописывать и править (set_reference_entries, remove_reference_entries), пометки мастера — ставить, править и убирать (set_gm_mark, delete_gm_mark); пометки игроков не трогаются. Новые пометки скрыты от игроков, показывает их мастер. Всё это — знание мастера: не пересказывайте его как то, что видят игроки.'
                 });
             }
             if (method === 'ping') return reply({});

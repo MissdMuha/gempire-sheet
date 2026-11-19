@@ -342,14 +342,51 @@ begin
     return true;
 end $$;
 
+-- 7. Листы персонажей и карточки — только чтение, по ключу (для Claude). Таблицы characters и cards не меняются.
+-- Все листы целиком
+create or replace function public.game_characters(p_key text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+    perform public.map_auth(p_key);
+    return coalesce((select jsonb_agg(to_jsonb(c) order by to_jsonb(c)->>'char_name') from public.characters c), '[]'::jsonb);
+end $$;
+
+-- Один лист: по id или по имени персонажа (без учёта регистра; можно часть имени)
+create or replace function public.game_character(p_key text, p_id text) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare r jsonb;
+begin
+    perform public.map_auth(p_key);
+    select to_jsonb(c) into r from public.characters c where c.id::text = p_id;
+    if r is null then
+        select to_jsonb(c) into r from public.characters c where lower(to_jsonb(c)->>'char_name') = lower(p_id);
+    end if;
+    if r is null then
+        select to_jsonb(c) into r from public.characters c where to_jsonb(c)->>'char_name' ilike '%' || p_id || '%' limit 1;
+    end if;
+    if r is null then raise exception 'нет такого персонажа: %', p_id using errcode = 'P0002'; end if;
+    return r;
+end $$;
+
+-- Карточки: все, или одного владельца (id персонажа; 'pool' — библиотека заготовок мастера)
+create or replace function public.game_cards(p_key text, p_owner text default null) returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+    perform public.map_auth(p_key);
+    return coalesce((select jsonb_agg(to_jsonb(k) order by k.owner_id::text, to_jsonb(k)->>'card_title')
+                     from public.cards k where p_owner is null or p_owner = '' or k.owner_id::text = p_owner), '[]'::jsonb);
+end $$;
+
 -- Кому что можно: функции с ключом — всем (без ключа они не пустят), служебные — никому, кроме владельца базы
 revoke all on function public.map_auth(text), public.map_whoami(text), public.map_list(text), public.map_get(text, text),
     public.map_ref_get(text, text), public.map_ref_put(text, text, jsonb, text), public.map_ref_patch(text, text, jsonb, text[]),
     public.map_key_claude(text, boolean), public.map_key_new(text),
-    public.map_mark_set(text, text, jsonb), public.map_mark_delete(text, text, text) from public, anon, authenticated;
+    public.map_mark_set(text, text, jsonb), public.map_mark_delete(text, text, text),
+    public.game_characters(text), public.game_character(text, text), public.game_cards(text, text) from public, anon, authenticated;
 grant execute on function public.map_whoami(text), public.map_list(text), public.map_get(text, text),
     public.map_ref_get(text, text), public.map_ref_put(text, text, jsonb, text), public.map_ref_patch(text, text, jsonb, text[]),
-    public.map_key_claude(text, boolean), public.map_mark_set(text, text, jsonb), public.map_mark_delete(text, text, text) to anon, authenticated;
+    public.map_key_claude(text, boolean), public.map_mark_set(text, text, jsonb), public.map_mark_delete(text, text, text),
+    public.game_characters(text), public.game_character(text, text), public.game_cards(text, text) to anon, authenticated;
 
 -- Ключи создаются один раз; ниже, в результатах, — ваши ключи. Ключ мастера вставьте на странице мастера
 -- (вкладка «Карта» → «Справка по клеткам»). Забыли — просто запустите этот скрипт ещё раз, он их покажет.
