@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Коннектор «Карта» для Claude (MCP-сервер) — функция Supabase (Edge Function).
-// Claude видит карту целиком (и скрытое от игроков) и может дописывать и править справку мастера по клеткам.
+// Claude видит карту целиком (и скрытое от игроков), может дописывать и править справку мастера по клеткам,
+// ставить, править и убирать пометки мастера (не игроков). Новые пометки скрыты от игроков — показывает их мастер.
 // Доступ — по ключу Claude: он стоит в адресе коннектора (…/functions/v1/map-mcp?key=КЛЮЧ). Без ключа функция
 // ничего не отдаёт, а сама работает через функции базы под ключом (supabase/map-setup.sql, раздел 6) —
 // служебных прав у неё нет.
@@ -69,6 +70,20 @@ function terrainName(def, c, r) {
     return tier && LV[t] ? `${LV[t][tier - 1]} (${TER[t]}, ступень задана)` : TER[t];
 }
 
+// Строка про пометку: где, что, скрыта ли, кто поставил, id
+function markLine(k, full = false) {
+    const d = k.data || {}, h = k.hidden ? ' ◌' : '', id = ` [${k.id}]`, who = k.author ? ` — ${k.author}` : '', note = t => t ? ': ' + (full ? t : short(t, 400)) : '';
+    if (k.kind === 'marker') { const [c, r] = cellOfPt(d.x, d.y); return `${coord(c, r)} метка «${d.name || ''}» (${MARK[d.type] || d.type})${h}${id}${who}${note(d.note)}`; }
+    if (k.kind === 'label') { const [c, r] = cellOfPt(d.x, d.y); return `${coord(c, r)} подпись «${d.text || ''}»${h}${id}${who}`; }
+    if (k.kind === 'zone') return `зона «${d.name || ''}»${h}${id}${who}: ${(d.cells || []).map(s => { const [c, r] = s.split(',').map(Number); return coord(c, r); }).join(', ')}${d.note ? '. ' + (full ? d.note : short(d.note, 300)) : ''}`;
+    if (k.kind === 'shape' && d.pts && d.pts.length) {
+        const cells = d.pts.map(([x, y]) => coord(...cellOfPt(x, y)));
+        const where = d.shape === 'circle' ? `центр ${cells[0]}, радиус ${(Math.hypot(d.pts[1][0] - d.pts[0][0], d.pts[1][1] - d.pts[0][1]) / S).toFixed(1)} кл.` : cells.join(' → ');
+        return `${SHAPE[d.shape] || d.shape}${d.name ? ` «${d.name}»` : ''} ${where}${h}${id}${who}${note(d.note)}`;
+    }
+    return `${k.kind}${h}${id}`;
+}
+
 // ---------- Обзор карты и клетки — текстом для Claude ----------
 function mapOverview(map, { fog = false } = {}) {
     const def = map.def || {}, cols = def.cols || 0, rows = def.rows || 0, out = [];
@@ -101,16 +116,9 @@ function mapOverview(map, { fog = false } = {}) {
         roads.forEach(rd => out.push(`- ${ROAD[rd.kind] || rd.kind}${rd.hidden ? ' (скрыта от игроков)' : ''}: ${rd.cells.map(([c, r]) => coord(c, r)).join(' → ')}`));
     }
     const marks = map.marks || [];
-    if (marks.length) {
-        out.push('\nПометки (◌ — скрыта от игроков):');
-        for (const k of marks) {
-            const d = k.data || {}, h = k.hidden ? ' ◌' : '';
-            if (k.kind === 'marker') { const [c, r] = cellOfPt(d.x, d.y); out.push(`- ${coord(c, r)} метка «${d.name || ''}» (${MARK[d.type] || d.type})${h}${d.note ? ': ' + short(d.note, 400) : ''}`); }
-            else if (k.kind === 'label') { const [c, r] = cellOfPt(d.x, d.y); out.push(`- ${coord(c, r)} подпись «${d.text || ''}»${h}`); }
-            else if (k.kind === 'zone') out.push(`- зона «${d.name || ''}»${h}: ${(d.cells || []).map(s => { const [c, r] = s.split(',').map(Number); return coord(c, r); }).join(', ')}${d.note ? '. ' + short(d.note, 300) : ''}`);
-            else if (k.kind === 'shape' && d.pts && d.pts.length) { const [c, r] = cellOfPt(d.pts[0][0], d.pts[0][1]); out.push(`- ${SHAPE[d.shape] || d.shape} от ${coord(c, r)}${d.name ? ` «${d.name}»` : ''}${h}${d.note ? ': ' + short(d.note, 300) : ''}`); }
-        }
-    }
+    const gmMarks = marks.filter(k => k.data && k.data.gm), plMarks = marks.filter(k => !(k.data && k.data.gm));
+    if (gmMarks.length) { out.push('\nПометки мастера (◌ — скрыта от игроков; в [скобках] — id для правки):'); gmMarks.forEach(k => out.push('- ' + markLine(k))); }
+    if (plMarks.length) { out.push('\nПометки игроков (их править нельзя):'); plMarks.forEach(k => out.push('- ' + markLine(k))); }
     const ref = map.ref || {};
     const keys = Object.keys(ref).filter(k => !k.startsWith('_'));
     out.push(keys.length ? `\nСправка мастера: ${keys.length} записей — ${keys.map(k => { const e = entryText(ref[k]); return e.title ? `${k} «${e.title}»` : k; }).join(', ')}. Полный текст — get_reference или view_cell.`
@@ -126,10 +134,9 @@ function cellInfo(map, cell) {
     (def.places || []).filter(q => q.c === c && q.r === r).forEach(q => out.push(`Селение: ${q.name || '(без названия)'} — ${PLACE[q.type] || q.type}${q.hidden ? ', скрыто от игроков' : q.nameHidden ? ', игроки видят без названия' : ''}.${q.note ? ' Заметка мастера: ' + q.note : ''}`));
     (def.roads || []).filter(rd => rd.cells.some(q => q[0] === c && q[1] === r)).forEach(rd => out.push(`Через клетку: ${ROAD[rd.kind] || rd.kind}${rd.hidden ? ' (скрыта от игроков)' : ''}.`));
     for (const k of map.marks || []) {
-        const d = k.data || {}, h = k.hidden ? ' (скрыта от игроков)' : '';
-        if ((k.kind === 'marker' || k.kind === 'label') && cellOfPt(d.x, d.y).join() === c + ',' + r)
-            out.push(k.kind === 'marker' ? `Метка «${d.name || ''}» (${MARK[d.type] || d.type})${h}${d.note ? ': ' + d.note : ''}` : `Подпись «${d.text || ''}»${h}`);
-        if (k.kind === 'zone' && (d.cells || []).includes(c + ',' + r)) out.push(`Зона «${d.name || ''}»${h}${d.note ? ': ' + d.note : ''}`);
+        const d = k.data || {}, set = d.gm ? 'мастера' : 'игроков';
+        const here = ((k.kind === 'marker' || k.kind === 'label') && cellOfPt(d.x, d.y).join() === c + ',' + r) || (k.kind === 'zone' && (d.cells || []).includes(c + ',' + r));
+        if (here) out.push(`Пометка ${set}: ${markLine(k, true)}`);
     }
     const ref = map.ref || {}, hits = [];
     for (const [key, val] of Object.entries(ref)) {
@@ -156,7 +163,30 @@ const TOOLS = [
         name: 'set_reference_entries', description: 'Дописать или заменить записи справки мастера. Остальные записи не трогаются. Ключ — клетка («Ж22»), прямоугольник («К10:О14») или несколько клеток через запятую («Е20, Е21»). Значение — текст или {title, text}; в тексте пустая строка — абзац, «- » — пункт списка, **жирный**, *курсив*. Чтобы поправить запись, сначала прочтите её (view_cell или get_reference) и пришлите целиком.',
         inputSchema: { type: 'object', properties: { map: MAP_ARG, entries: { type: 'object', description: '{ "Ж22": { "title": "…", "text": "…" }, "К10:О14": "…" }', additionalProperties: { anyOf: [{ type: 'string' }, { type: 'object', properties: { title: { type: 'string' }, text: { type: 'string' } } }] } } }, required: ['entries'] }
     },
-    { name: 'remove_reference_entries', description: 'Убрать записи справки мастера по их ключам (как они записаны в справке).', inputSchema: { type: 'object', properties: { map: MAP_ARG, keys: { type: 'array', items: { type: 'string' } } }, required: ['keys'] } }
+    { name: 'remove_reference_entries', description: 'Убрать записи справки мастера по их ключам (как они записаны в справке).', inputSchema: { type: 'object', properties: { map: MAP_ARG, keys: { type: 'array', items: { type: 'string' } } }, required: ['keys'] } },
+    {
+        name: 'set_gm_mark',
+        description: 'Поставить новую пометку мастера или поправить существующую (по id из view_map / view_cell). Пометки игроков менять нельзя. Новая пометка скрыта от игроков — показать её игрокам может только мастер; поле hidden не меняется. При правке передавайте только то, что меняете.\n' +
+            'kind: marker — метка в клетке (cell, type, name, note); label — подпись на карте (cell, text, size s|m|l); zone — закрашенные клетки (cells: ["Ж22", "К10:О14"], name, ink, note); shape — линия или фигура (shape: line|path|poly|circle, points: клетки по порядку, у круга — центр и radius в клетках; name, note, ink).\n' +
+            'type метки: camp лагерь, danger опасность, cache тайник, unknown загадка, note заметка, goal цель, person встреча, battle сражение, treasure сокровище, entrance вход. ink: red, blue, green, sepia, ink, violet.',
+        inputSchema: {
+            type: 'object', properties: {
+                map: MAP_ARG,
+                id: { type: 'string', description: 'id пометки мастера — чтобы поправить её; без id — новая' },
+                kind: { type: 'string', enum: ['marker', 'label', 'zone', 'shape'] },
+                cell: { type: 'string', description: 'клетка для метки или подписи: «Ж22»' },
+                type: { type: 'string', enum: ['camp', 'danger', 'cache', 'unknown', 'note', 'goal', 'person', 'battle', 'treasure', 'entrance'] },
+                name: { type: 'string' }, note: { type: 'string' }, text: { type: 'string', description: 'текст подписи' },
+                size: { type: 'string', enum: ['s', 'm', 'l'] },
+                cells: { type: 'array', items: { type: 'string' }, description: 'клетки зоны: «Ж22» или прямоугольник «К10:О14»' },
+                shape: { type: 'string', enum: ['line', 'path', 'poly', 'circle'] },
+                points: { type: 'array', items: { type: 'string' }, description: 'клетки линии по порядку; у круга — одна, центр' },
+                radius: { type: 'number', description: 'радиус круга в клетках' },
+                ink: { type: 'string', enum: ['red', 'blue', 'green', 'sepia', 'ink', 'violet'] }
+            }
+        }
+    },
+    { name: 'delete_gm_mark', description: 'Убрать пометку мастера по id (из view_map / view_cell). Пометки игроков убирать нельзя.', inputSchema: { type: 'object', properties: { map: MAP_ARG, id: { type: 'string' } }, required: ['id'] } }
 ];
 
 export function createHandler({ url, anon, fetchImpl = fetch }) {
@@ -209,6 +239,18 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
             const r = await rpc('map_ref_patch', { p_key: key, p_map: map.id, p_set: {}, p_remove: keys });
             return `Готово: убрано ${keys.length - missing.length}${missing.length ? `; таких записей не было: ${missing.join(', ')}` : ''}. Осталось в справке — ${r.count}.`;
         }
+        if (name === 'set_gm_mark') {
+            const fields = ['id', 'kind', 'cell', 'type', 'name', 'note', 'text', 'size', 'cells', 'shape', 'points', 'radius', 'ink'];
+            const mark = Object.fromEntries(fields.filter(f => a[f] !== undefined).map(f => [f, a[f]]));
+            if (!mark.id && !mark.kind) mark.kind = 'marker';
+            const r = await rpc('map_mark_set', { p_key: key, p_map: map.id, p_mark: mark });
+            return `Готово: ${a.id ? 'поправлена' : 'поставлена'} пометка мастера — ${markLine(r, true)}.${r.hidden ? ' Игроки её не видят, пока мастер не покажет.' : ''}`;
+        }
+        if (name === 'delete_gm_mark') {
+            if (!a.id) throw new Error('нужен id пометки');
+            await rpc('map_mark_delete', { p_key: key, p_map: map.id, p_id: String(a.id) });
+            return `Готово: пометка ${a.id} убрана.`;
+        }
         throw new Error('нет такого инструмента: ' + name);
     }
 
@@ -228,7 +270,7 @@ export function createHandler({ url, anon, fetchImpl = fetch }) {
                     protocolVersion: VERSIONS.includes(params && params.protocolVersion) ? params.protocolVersion : VERSIONS[0],
                     capabilities: { tools: { listChanged: false } },
                     serverInfo: { name: 'gempire-map', title: 'Карта кампании', version: '1.0.0' },
-                    instructions: 'Карта настольной кампании и справка мастера по клеткам. Начните с list_maps или view_map; подробности о клетке — view_cell. Справку можно дописывать и править (set_reference_entries, remove_reference_entries). Всё это — знание мастера: не пересказывайте его как то, что видят игроки.'
+                    instructions: 'Карта настольной кампании и справка мастера по клеткам. Начните с list_maps или view_map; подробности о клетке — view_cell. Справку можно дописывать и править (set_reference_entries, remove_reference_entries), пометки мастера — ставить, править и убирать (set_gm_mark, delete_gm_mark); пометки игроков не трогаются. Новые пометки скрыты от игроков, показывает их мастер. Всё это — знание мастера: не пересказывайте его как то, что видят игроки.'
                 });
             }
             if (method === 'ping') return reply({});
