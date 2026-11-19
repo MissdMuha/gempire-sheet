@@ -106,6 +106,19 @@ a:hover { color: var(--ink); }
     background: var(--panel); border: 1px solid var(--ink); padding: 22px; display: flex; flex-direction: column; gap: 16px;
     user-select: text; -webkit-user-select: text; overscroll-behavior: contain;
 }
+/* Спрятать / показать панель (на компьютере): язычок у левого края панели */
+.gm-panel-toggle {
+    position: absolute; right: 329px; top: 44px; z-index: 3; min-width: 22px; height: 44px; padding: 0 6px;
+    background: var(--panel); border: 1px solid var(--ink); border-right: none; color: var(--ink);
+    font-family: 'Alegreya', Georgia, serif; font-size: 20px; line-height: 1; cursor: pointer;
+}
+.gm-panel-toggle:hover { background: var(--hover); }
+.gm-panel-toggle span { font-size: 14px; }
+.gm-root.panel-hidden .gm-panel { display: none; }
+.gm-root.panel-hidden .gm-panel-toggle { right: 20px; border-right: 1px solid var(--ink); }
+.gm-root.panel-hidden .gm-zoom { right: 20px; }
+.gm-root.panel-hidden .gm-compass { right: 22px; top: 76px; }
+.gm-root.compact .gm-panel-toggle { display: none; }
 .gm-sec { display: flex; flex-direction: column; gap: 8px; }
 .gm-kicker { font-family: 'Alegreya SC', Georgia, serif; font-size: 12px; letter-spacing: 0.25em; color: var(--muted); }
 .gm-kicker.red { color: var(--red); }
