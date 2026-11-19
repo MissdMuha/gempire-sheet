@@ -175,7 +175,7 @@ function noise(x, y, seed) {
 const def = emptyDef(COLS, ROWS);
 def.title = 'Никтонавты';
 def.subtitle = 'Круг поиска · крайний юг Бланда';
-def.scale = { n: 8, unit: 'вёрст' };
+def.scale = { n: 2, unit: 'лиг' }; // 2 лиги = 8 вёрст
 def.look = { ...def.look, style: 'engraving', glyphs: 'antique', spread: 'range' };
 const T = new Array(COLS * ROWS).fill('.'), TIER = new Array(COLS * ROWS).fill('0'), FOG = new Array(COLS * ROWS).fill('0');
 const kind = new Array(COLS * ROWS).fill(null), tierSet = new Array(COLS * ROWS).fill(null);
