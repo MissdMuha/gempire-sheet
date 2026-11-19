@@ -32,7 +32,7 @@ const POOLS = [[880, 1015, 62], [840, 1062, 40], [935, 982, 32], [1028, 828, 30]
 // Северо-запад. Дорога на Гряду поднимается из ельника выше границы леса: Стылая Плешина → Кутьма → Кадык → Оглядка.
 // Здесь камень (горы), а не нагорье
 const HIGHLAND = [[3.4, 8.0], [9.2, 8.0], [9.5, 9.8], [9.0, 11.8], [8.7, 13.6], [8.5, 15.6], [8.1, 17.4], [6.5, 17.9], [4.6, 17.7], [3.4, 16.0]];
-// Ступень Рыгны: плоская пашня между хребтами, по краям — увалы
+// Плато Рыгны: ровная пашня, поднятая над котловиной; к лесу и болотам (юг, восток) — обрыв, с запада и севера — горы
 const RYGNA_STEP = [[9.4, 8.6], [11.6, 8.3], [13.8, 8.8], [14.4, 10.2], [14.2, 12.4], [13.0, 13.6], [11.2, 13.9], [9.6, 13.4], [9.1, 11.6]];
 // Предгорья у развилки: бурые увалы и курумник
 const FOOTHILLS = [[7.0, 24.8], [9.6, 25.2], [10.2, 27.4], [9.8, 29.8], [8.0, 29.4], [6.6, 27.0]];
@@ -199,7 +199,7 @@ for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     // Дорога на Гряду. Выше границы леса (строки 18 и выше) на западе — камень, ни одного дерева
     if (r <= TREELINE - 2 && c <= LET.indexOf('К') && !inPoly(wc, wr, RYGNA_STEP)) { kind[i] = 'm'; tierSet[i] = r === TREELINE - 2 ? '1' : r >= 14 ? '1' : '2'; continue; }
     if (inPoly(wc, wr, HIGHLAND)) { kind[i] = 'm'; tierSet[i] = cy > 15.8 ? '1' : '2'; continue; }
-    if (inPoly(wc, wr, RYGNA_STEP)) { kind[i] = distToPoly(cx, cy, RYGNA_STEP) < 0.9 ? 'h' : 'p'; continue; }
+    if (inPoly(wc, wr, RYGNA_STEP)) { kind[i] = 'u'; continue; }
     // и дальше на восток по И–К 19–25 — тоже редкий ельник
     if (r >= TREELINE - 1 && inCols(c, 'И', 'К') && r <= 24) { kind[i] = 'c'; tierSet[i] = '1'; continue; }
     if (Math.hypot(cx - DRY_LAKE[0], cy - DRY_LAKE[1]) < DRY_LAKE[2]) { kind[i] = 'p'; continue; } // солончак — голое место
@@ -242,7 +242,7 @@ for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     else if (k === 'f') {
         T[i] = 'f';
         let edge = false;
-        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const n = kindAt(c + dc, r + dr); if (n === 's' || n === 'b' || n === 'c' || n === 'w' || n === 'p') edge = true; }
+        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { const n = kindAt(c + dc, r + dr); if (n === 's' || n === 'b' || n === 'c' || n === 'w' || n === 'p' || n === 'u') edge = true; }
         TIER[i] = edge ? '1' : '2';
     } else { T[i] = k; if (tierSet[i]) TIER[i] = tierSet[i]; }
 }
@@ -281,4 +281,4 @@ marks.push(mark('zone', { name: 'Поваленный рыжий лес', ink: '
 const out = { kind: 'gempire-map', def, marks };
 writeFileSync(new URL('./nyctonauts.json', import.meta.url), JSON.stringify(out));
 const count = ch => T.filter(x => x === ch).length;
-console.log(`Никтонавты: ${COLS}×${ROWS}, горы ${count('m')}, лес ${count('f')}, ельник ${count('c')}, холмы ${count('h')}, равнина ${count('p')}, заболоченный лес ${count('b')}, топь ${count('s')}, вода ${count('w')}; селений ${def.places.length}, дорог ${def.roads.length}, пометок ${marks.length} (скрытых ${marks.filter(m => m.hidden).length})`);
+console.log(`Никтонавты: ${COLS}×${ROWS}, горы ${count('m')}, лес ${count('f')}, ельник ${count('c')}, холмы ${count('h')}, равнина ${count('p')}, плато ${count('u')}, заболоченный лес ${count('b')}, топь ${count('s')}, вода ${count('w')}; селений ${def.places.length}, дорог ${def.roads.length}, пометок ${marks.length} (скрытых ${marks.filter(m => m.hidden).length})`);
